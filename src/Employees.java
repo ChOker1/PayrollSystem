@@ -28,4 +28,46 @@ public class Employees {
     }
 
 
+    //setters
+
+    public void setRate(float rate) {
+        this.rate = rate;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setAttendance(float attendance) {
+        this.attendance = attendance;
+    }
+    public void setDeduction(Deduction deduction) {
+        this.deduction = deduction;
+    }
+
+    public void setPayroll(Payroll payroll) {
+        this.payroll = payroll;
+    }
+
+    //getters
+
+    public float getRate() {
+        return rate;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public float getAttendance() {
+        return attendance;
+    }
+
+    public Payroll getPayroll() {
+        return payroll;
+    }
+
+    public Deduction getDeduction() {
+        return deduction;
+    }
 }
