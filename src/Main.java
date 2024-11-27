@@ -1,5 +1,5 @@
 import  java.io.BufferedReader;
-import  java.io.BufferedReader;
+import  java.io.BufferedWriter;
 import  java.io.FileReader;
 import  java.io.FileWriter;
 import  java.io.File;
@@ -25,7 +25,12 @@ public class Main {
             System.out.println("Failed to create directory at: " + newDirectory.getAbsolutePath());
         }
 
+        String textFilePath = newDirectoryPath + File.separator + "newTextFile.txt";
+        File textFile = new File(textFilePath);
+
         try{
+            BufferedReader reader = new BufferedReader(new FileReader(textFile));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(textFile));
 
         } catch (Exception e){
             System.out.println(e);
