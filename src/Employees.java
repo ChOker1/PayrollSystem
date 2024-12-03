@@ -1,8 +1,8 @@
 public class Employees {
 
-    private String name;
-    private float rate;
-    private float attendance;
+    private String name = "";
+    private float rate = 0;
+    private float attendance = 0;
     private  Payroll payroll;
     private Deduction deduction;
 

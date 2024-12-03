@@ -3,7 +3,7 @@ public class Deduction {
     private double philhealth;
     private double loans;
     private double others;
-
+    private double total;
     //constructors
     public Deduction(){
         sss = 0;
@@ -36,6 +36,10 @@ public class Deduction {
         this.others = others;
     }
 
+    public void setTotal(double total) {
+        this.total = total;
+    }
+
     //getters
     public double getSss() {
         return sss;
@@ -53,9 +57,12 @@ public class Deduction {
         return others;
     }
 
-   //get total
     public double getTotal(){
+        if(total!=0){
+            return total;
+        }
         return sss+philhealth+loans+others;
     }
+
 
 }
