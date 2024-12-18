@@ -25,15 +25,23 @@ public class Main {
             System.out.println("Failed to create directory at: " + newDirectory.getAbsolutePath());
         }
 
-        String textFilePath = newDirectoryPath + File.separator + "newTextFile.txt";
+        String textFilePath = newDirectoryPath + File.separator + "testfile.txt";
         File textFile = new File(textFilePath);
 
+
+
         try{
+            if (textFile.createNewFile()) {
+                System.out.println("File created: " + textFile.getAbsolutePath());
+            } else {
+                System.out.println("File already exists: " + textFile.getAbsolutePath());
+            }
             BufferedReader reader = new BufferedReader(new FileReader(textFile));
             BufferedWriter writer = new BufferedWriter(new FileWriter(textFile));
 
+
         } catch (Exception e){
-            System.out.println(e);
+            e.printStackTrace();
         }
 
         Employees employees = new Employees();
