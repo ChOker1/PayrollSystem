@@ -12,7 +12,7 @@ public class Deduction {
         others = 0;
     }
 
-    public Deduction(double sss,double philhealth, double loans,double others){
+    public Deduction(double loans, double sss, double others, double philhealth){
         this.sss = sss;
         this.philhealth = philhealth;
         this.loans = loans;

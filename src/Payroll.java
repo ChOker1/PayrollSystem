@@ -2,6 +2,7 @@ public class Payroll {
     private double grossic;
     private double netic;
     private double commission;
+    private Deduction deduction;
 
     public Payroll(){
         grossic = 0;
@@ -9,11 +10,12 @@ public class Payroll {
         commission = 0;
     }
 
-    public  Payroll(double grossic, double netic,double commitions){
+    public  Payroll(double commitions,double grossic, double netic){
         this.grossic = grossic;
         this.netic = netic;
         this.commission = commitions;
     }
+
 
     //setters
     public void setGrossic(double grossic) {
@@ -24,6 +26,10 @@ public class Payroll {
     }
     public void setCommission(double commission) {
         this.commission = commission;
+    }
+
+    public void setDeduction(Deduction deduction) {
+        this.deduction = deduction;
     }
 
     // getters

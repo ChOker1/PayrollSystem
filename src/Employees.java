@@ -2,31 +2,33 @@ public class Employees {
 
     private String name;
     private float rate;
-    private float attendance;
+    private float days;
     private  Payroll payroll;
-    private Deduction deduction;
 
     //constructors
     public Employees(){
         rate = 0;
         name = "";
-        attendance = 0;
+        days = 0;
         payroll = new Payroll();
     }
 
-    public  Employees(String name, float rate, float attendance, Payroll payroll, Deduction deduction){
+    public  Employees(String name, float rate, float Days, Payroll payroll){
         this.name = name;
         this.rate = rate;
-        this.attendance = attendance;
+        this.days = Days;
         this.payroll = payroll;
-        this.deduction = deduction;
+
     }
     public  Employees(String name, float rate, float attendance){
         this.name = name;
         this.rate = rate;
-        this.attendance = attendance;
+        this.days = attendance;
     }
 
+    public void AddDeduction(Deduction deduction){
+        payroll.setDeduction(deduction);
+    }
 
     //setters
 
@@ -38,12 +40,10 @@ public class Employees {
         this.name = name;
     }
 
-    public void setAttendance(float attendance) {
-        this.attendance = attendance;
+    public void setDays(float days) {
+        this.days = days;
     }
-    public void setDeduction(Deduction deduction) {
-        this.deduction = deduction;
-    }
+
 
     public void setPayroll(Payroll payroll) {
         this.payroll = payroll;
@@ -59,15 +59,12 @@ public class Employees {
         return name;
     }
 
-    public float getAttendance() {
-        return attendance;
+    public float getDays() {
+        return days;
     }
 
     public Payroll getPayroll() {
         return payroll;
     }
 
-    public Deduction getDeduction() {
-        return deduction;
-    }
 }
