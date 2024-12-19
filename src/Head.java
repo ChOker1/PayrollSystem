@@ -77,6 +77,7 @@ public class Head {
 
             for(int i = 0 ; i < employees.size(); i++){
                 writer.write(employees.get(i).toString());
+                writer.newLine();
             }
 
             writer.close();
@@ -95,7 +96,9 @@ public class Head {
 
             for (int i = 0; i < employees.size(); i++) {
                 writer.write(employees.get(i).toSaveOrigin());
+                writer.newLine();
             }
+            writer.close();
         }catch (Exception e){
             e.printStackTrace();
         }

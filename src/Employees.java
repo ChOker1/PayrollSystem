@@ -113,7 +113,7 @@ public class Employees {
     }
 
     public String toSaveOrigin(){
-        return name + '`'+ rate + '`' + payroll.getDeduction().getLoans() + '`' + payroll.getDeduction().getSss() + '`' +payroll.getDeduction().getPhilhealth();
+        return name + '`'+ (int)rate  + '`' + (int)payroll.getDeduction().getLoans() + '`' + (int)payroll.getDeduction().getSss() + '`' + (int)payroll.getDeduction().getPhilhealth();
     }
 
 }

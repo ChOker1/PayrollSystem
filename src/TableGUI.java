@@ -10,7 +10,7 @@ public class TableGUI {
 
     public TableGUI(ArrayList<Employees> employeeList) {
         // Create the frame
-        JFrame frame = new JFrame("7x12 Table Example");
+        JFrame frame = new JFrame("Payroll");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 400); // Adjust the size as needed
 
