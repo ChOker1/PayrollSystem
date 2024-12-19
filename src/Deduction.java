@@ -18,6 +18,11 @@ public class Deduction {
         this.loans = loans;
         this.others = others;
     }
+    public Deduction(double loans, double sss, double philhealth){
+        this.sss = sss;
+        this.philhealth = philhealth;
+        this.loans = loans;
+    }
 
     //setters
     public void setSss(double sss) {
@@ -58,4 +63,8 @@ public class Deduction {
         return sss+philhealth+loans+others;
     }
 
+
+    public String toString(){
+        return loans + "`" + sss + "`" + others + "`" + philhealth + "`" + getTotal();
+    }
 }

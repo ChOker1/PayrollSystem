@@ -1,19 +1,16 @@
 public class Payroll {
     private double grossic;
     private double netic;
-    private double commission;
     private Deduction deduction;
 
     public Payroll(){
         grossic = 0;
         netic = 0;
-        commission = 0;
     }
 
-    public  Payroll(double commitions,double grossic, double netic){
+    public  Payroll(double grossic, double netic){
         this.grossic = grossic;
         this.netic = netic;
-        this.commission = commitions;
     }
 
 
@@ -23,9 +20,6 @@ public class Payroll {
     }
     public void setNetic(double netic) {
         this.netic = netic;
-    }
-    public void setCommission(double commission) {
-        this.commission = commission;
     }
 
     public void setDeduction(Deduction deduction) {
@@ -37,10 +31,22 @@ public class Payroll {
         return grossic;
     }
     public double getNetic() {
+        computeNet();
         return netic;
     }
-    public double getCommission() {
-        return commission;
+
+    public Deduction getDeduction() {
+        return deduction;
     }
+
+    public void computeGross(float rate, float days, float commission){
+        grossic = (rate * days) + commission;
+    }
+    public void computeNet(){
+        netic = grossic - deduction.getTotal();
+    }
+
+
+
 
 }
