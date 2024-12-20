@@ -7,6 +7,7 @@ public class Head {
     static String newDirectoryPath;
     public static void run() {
 
+
         ArrayList<Employees> employee = new ArrayList<>();
 
 
@@ -80,9 +81,10 @@ public class Head {
     }
 
     public static void Write(ArrayList<Employees> employees){
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM");
         LocalDate date = LocalDate.now();
         String sdate = date.format(formatter);
+        String[] tdate = sdate.split("-");
         String filedate = sdate + ".txt";
         String TextFileWrite = newDirectoryPath + File.separator + filedate;
         File FileOut = new File(TextFileWrite);
@@ -125,5 +127,9 @@ public class Head {
             System.out.println(e.getMessage());
         }
 
+    }
+
+    public static void reada(String loc,String week){
+        String filein = newDirectoryPath + File.separator + loc;
     }
 }

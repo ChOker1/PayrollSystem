@@ -2,6 +2,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -9,11 +10,12 @@ import java.util.ArrayList;
 
 
 public class TableGUI {
-    private boolean isUpdating = false;  // Declare the flag at the class level
+    private boolean isUpdating = false;
+    private static JFrame frame = new JFrame("Payroll");// Declare the flag at the class level
 
     public TableGUI(ArrayList<Employees> employeeList) {
         // Create the frame
-        JFrame frame = new JFrame("Payroll");
+
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 400); // Adjust the size as needed
 
@@ -399,7 +401,51 @@ public class TableGUI {
 
 
     public static void main(String[] args) {
-        Head.run();
+        JFrame sframe = new JFrame();
+        JPanel main = new JPanel();
+        JPanel start = new JPanel();
+        JLabel label = new JLabel("Welcome to Yamban Payroll System");
+        JButton create = new JButton("Create");
+        create.addActionListener(e ->{
+
+            sframe.dispose();
+            Head.run();
+
+
+        });
+
+        create.setVisible(true);
+
+        JButton viewr = new JButton("View Recent");
+        viewr.addActionListener(e -> {
+
+        });
+
+        start.add(label);
+
+        JPanel bpannel = new JPanel();
+        bpannel.add(create);
+        bpannel.add(viewr);
+        JScrollPane pane = new JScrollPane(start);
+        main.setLayout(new BorderLayout());
+        main.add(start,BorderLayout.NORTH);
+        main.add(bpannel,BorderLayout.CENTER);
+
+
+        sframe.add(main);
+
+
+
+        sframe.setVisible(true);
+        sframe.setLocationRelativeTo(null);
+        sframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        sframe.setSize(700,500);
+
+
+
+
+
+
     }
 
 
