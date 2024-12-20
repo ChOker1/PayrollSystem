@@ -54,30 +54,27 @@ public class TableGUI {
 
 
 
-        //Set colors to the adjustable cell
+
+        // Set colors to the adjustable cell and dead rows
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component cellComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-                if (table.isCellEditable(row, column)) {
-                    cellComponent.setBackground(Color.YELLOW);  // Set the color for editable cells
+                // Check if the "Days" column (index 2) value is 0
+                if (table.getValueAt(row, 2) != null && Double.parseDouble(table.getValueAt(row, 2).toString()) == 0) {
+                    // Set the entire row's background color to red
+                    cellComponent.setBackground(Color.red);
                 } else {
-                    cellComponent.setBackground(Color.WHITE);  // Set the default color for non-editable cells
+                    // Set default background for editable and non-editable cells
+                    if (table.isCellEditable(row, column)) {
+                        cellComponent.setBackground(Color.YELLOW);  // Editable cells
+                    } else {
+                        cellComponent.setBackground(Color.WHITE);  // Non-editable cells
+                    }
                 }
+
                 return cellComponent;
-            }
-        });
-
-// Set a custom cell editor to change the background color of editable cells when editing
-        table.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()) {
-            @Override
-            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-                Component editorComponent = super.getTableCellEditorComponent(table, value, isSelected, row, column);
-
-                // Change background color of the editor (editable cell) when it is being edited
-                editorComponent.setBackground(Color.CYAN);  // Set the color when editing
-                return editorComponent;
             }
         });
 
