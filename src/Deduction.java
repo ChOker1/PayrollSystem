@@ -24,22 +24,6 @@ public class Deduction {
         this.loans = loans;
     }
 
-    //setters
-    public void setSss(double sss) {
-        this.sss = sss;
-    }
-
-    public void setPhilhealth(double philhealth) {
-        this.philhealth = philhealth;
-    }
-
-    public void setLoans(double loans) {
-        this.loans = loans;
-    }
-
-    public void setOthers(double others) {
-        this.others = others;
-    }
 
     //getters
     public double getSss() {
@@ -53,11 +37,6 @@ public class Deduction {
     public double getLoans() {
         return loans;
     }
-
-    public double getOthers() {
-        return others;
-    }
-
    //get total
     public double getTotal(){
         return sss+philhealth+loans+others;
@@ -65,6 +44,9 @@ public class Deduction {
 
 
     public String toString(){
-        return loans + "`" + sss + "`" + others + "`" + philhealth + "`" + getTotal();
+        return (int)loans + "`" +(int)sss + "`" + (int)others + "`" + (int)philhealth + "`" + (int)getTotal();
+    }
+    public String toStringOrigin(){
+        return (int)loans + "`" +(int)sss + "`" + (int)philhealth;
     }
 }

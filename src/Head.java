@@ -31,29 +31,50 @@ public class Head {
         String textFilePath = newDirectoryPath + File.separator + "testfile.txt";
         File FileRead = new File(textFilePath);
 
-        try{
+        try {
             int i = 1;
             BufferedReader reader = new BufferedReader(new FileReader(FileRead));
             String line = reader.readLine();
-            while (line != null){
-                String[] read = line.split("`",5);
-                Deduction deduction = new Deduction(Integer.parseInt(read[2]),Integer.parseInt(read[3]),Integer.parseInt(read[4]));
-                employee.add(new Employees(read[0],Integer.parseInt(read[1]),deduction));
-                line = reader.readLine();
+
+            while (line != null) {
+                // Split the line by backticks (`) without limiting the number of parts
+                String[] read = line.split("`");
+
+                // Check if there are at least 7 parts in the read array (or handle missing parts gracefully)
+                if (read.length >= 7) {
+                    // Parse the deduction values
+                    int loans = Integer.parseInt(read[4]);
+                    int sss = Integer.parseInt(read[5]);
+                    int philhealth = Integer.parseInt(read[6]);
+
+                    // Create a new Deduction object
+                    Deduction deduction = new Deduction(loans, sss, philhealth);
+
+                    // Create a new Employee object with the parsed data
+                    employee.add(new Employees(read[0], Integer.parseInt(read[1]), Integer.parseInt(read[2]), Integer.parseInt(read[3]), deduction));
+                } else {
+                    // Handle cases where there aren't enough fields (this should ideally not happen if the data is well-formed)
+                    System.err.println("Skipping invalid line: " + line);
+                }
                 System.out.println(i);
+
+                // Read the next line
+                line = reader.readLine();
                 i++;
             }
+
+            // Create the TableGUI with the list of employees
             new TableGUI(employee);
 
-            for(Employees e : employee){
+            // Output the employee details for verification
+            for (Employees e : employee) {
                 System.out.println(e.toString());
             }
 
-
-        } catch (Exception e){
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-        Employees employees = new Employees();
+
 
 
     }
@@ -66,7 +87,7 @@ public class Head {
         String TextFileWrite = newDirectoryPath + File.separator + filedate;
         File FileOut = new File(TextFileWrite);
 
-        System.out.println("write");
+        System.out.println("write file to archived");
         try {
             if (FileOut.createNewFile()) {
                 System.out.println("File created: " + FileOut.getAbsolutePath());
@@ -83,12 +104,13 @@ public class Head {
             writer.close();
 
         }catch (Exception e){
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 
     public static void saveOrigin(ArrayList<Employees> employees){
         String FileOut = newDirectoryPath + File.separator + "testfile.txt";
+        System.out.println("updated origin");
 
         try {
 
@@ -100,7 +122,7 @@ public class Head {
             }
             writer.close();
         }catch (Exception e){
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
     }

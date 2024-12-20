@@ -8,27 +8,7 @@ public class Employees {
     private  Payroll payroll;
 
     //constructors
-    public Employees(){
-        rate = 0;
-        name = "";
-        days = 0;
-        commission = 0;
-        payroll = new Payroll();
-    }
 
-    public  Employees(String name, double rate, double Days, double commission, Payroll payroll, Deduction deduction, double salary){
-        this.name = name;
-        this.rate = rate;
-        this.days = Days;
-        this.commission = commission;
-        this.payroll = payroll;
-        this.payroll.setDeduction(deduction);
-        this.salary = salary;
-    }
-    public  Employees(String name, float rate){
-        this.name = name;
-        this.rate = rate;
-    }
     public  Employees(String name, double rate,Deduction deduction){
         this.name = name;
         this.rate = rate;
@@ -36,26 +16,21 @@ public class Employees {
         this.payroll.setDeduction(deduction);
 
     }
-    public  Employees(float days, float commission){
+    public  Employees(String name, double rate,double days,double commission,Deduction deduction){
+        this.name = name;
+        this.rate = rate;
         this.days = days;
         this.commission = commission;
+        this.payroll = new Payroll();
+        computeGross();
+        payroll.computeNet();
+        this.payroll.setDeduction(deduction);
+
+
     }
 
-
-
-    public void setDeduction(Deduction deduction){
-        payroll.setDeduction(deduction);
-    }
 
     //setters
-
-    public void setRate(double rate) {
-        this.rate = rate;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public void setDays(double days) {
         this.days = days;
@@ -65,13 +40,6 @@ public class Employees {
         this.commission = commission;
     }
 
-    public void setPayroll(Payroll payroll) {
-        this.payroll = payroll;
-    }
-
-    public void setSalary(double salary) {
-        this.salary = salary;
-    }
     //getters
 
     public double getRate() {
@@ -109,11 +77,11 @@ public class Employees {
 
     @Override
     public String toString(){
-        return name + "`" + rate + "`" + days + "`" +salary+ "`" + commission + "`" + payroll.getGrossic() + "`" +payroll.getDeduction().toString() + "`" + payroll.getNetic();
+        return name + "`" + (int)rate + "`" + (int)days + "`" + (int)salary+ "`" + (int)commission + "`" + (int)payroll.getGrossic() + "`" + payroll.getDeduction().toString() + "`" + (int)payroll.getNetic();
     }
 
     public String toSaveOrigin(){
-        return name + '`'+ (int)rate  + '`' + (int)payroll.getDeduction().getLoans() + '`' + (int)payroll.getDeduction().getSss() + '`' + (int)payroll.getDeduction().getPhilhealth();
+        return name + "`" + (int)rate + "`" + (int)days + "`" +  (int)commission + "`" + payroll.getDeduction().toStringOrigin();
     }
 
 }

@@ -1,6 +1,9 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 
@@ -18,19 +21,20 @@ public class TableGUI {
         String[] columnNames = new String[12];
         String[] bar = {"NAME", "RATE", "DAYS", "SALARY", "COMMISSIONS", "GROSS INCOME", "LOANS", "SSS", "OTHERS", "PHILHEALTH", "DEDUCTION", "NET INCOME"};
         System.arraycopy(bar, 0, columnNames, 0, 12);
+
         int i =0;
 
         Object[][] data = new Object[employeeList.size()+i][12];
         for (int row = 0; row < employeeList.size(); row++) {
             data[row][0] = employeeList.get(row).getName();
             data[row][1] = employeeList.get(row).getRate();
-            data[row][2] = "";
+            data[row][2] = employeeList.get(row).getDays();
             data[row][3] = employeeList.get(row).getRate() * employeeList.get(row).getDays();
-            data[row][4] = "";
+            data[row][4] = employeeList.get(row).getCommission();
             data[row][5] = employeeList.get(row).getPayroll().getGrossic();
             data[row][6] = employeeList.get(row).getPayroll().getDeduction().getLoans();
             data[row][7] = employeeList.get(row).getPayroll().getDeduction().getSss();
-            data[row][8] = "";
+            data[row][8] = "0";
             data[row][9] = employeeList.get(row).getPayroll().getDeduction().getPhilhealth();
             data[row][10] = employeeList.get(row).getPayroll().getDeduction().getTotal();
             data[row][11] = employeeList.get(row).getPayroll().getNetic();
@@ -44,7 +48,43 @@ public class TableGUI {
             }
         };
 
+
+
         JTable table = new JTable(model);
+
+
+
+        //Set colors to the adjustable cell
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component cellComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+                if (table.isCellEditable(row, column)) {
+                    cellComponent.setBackground(Color.YELLOW);  // Set the color for editable cells
+                } else {
+                    cellComponent.setBackground(Color.WHITE);  // Set the default color for non-editable cells
+                }
+                return cellComponent;
+            }
+        });
+
+// Set a custom cell editor to change the background color of editable cells when editing
+        table.setDefaultEditor(Object.class, new DefaultCellEditor(new JTextField()) {
+            @Override
+            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                Component editorComponent = super.getTableCellEditorComponent(table, value, isSelected, row, column);
+
+                // Change background color of the editor (editable cell) when it is being edited
+                editorComponent.setBackground(Color.CYAN);  // Set the color when editing
+                return editorComponent;
+            }
+        });
+
+
+
+
+
 
         // Add a listener to update calculations based on changes
         model.addTableModelListener(e -> {
@@ -56,9 +96,19 @@ public class TableGUI {
                 try {
                     isUpdating = true;  // Set the flag to indicate an update is in progress
 
+                    if (column == 2 || column == 4 || column == 8 ) {
+                        Object newValue = model.getValueAt(row, column);
+                        if (newValue != null && !newValue.toString().trim().isEmpty()) {
+                            // Replace the "0" with the entered value
+                            if ("0".equals(model.getValueAt(row, column).toString())) {
+                                model.setValueAt(newValue, row, column);
+                            }
+                        }
+                    }
+
                     double days = Double.parseDouble(model.getValueAt(row, 2).toString());
                     employeeList.get(row).setDays(days);
-                    double salary = employeeList.getFirst().getSalary();
+                    double salary = employeeList.get(row).getSalary();
                     model.setValueAt(salary, row, 3); // Update SALARY
 
                     double commissions = model.getValueAt(row, 4).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 4).toString());
@@ -89,6 +139,20 @@ public class TableGUI {
             }
         });
 
+        table.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int row = table.getSelectedRow();
+                int column = table.getSelectedColumn();
+
+                // Check if the selected cell is editable
+                char in = e.getKeyChar();
+                if (row >= 0 && column >= 0 && model.isCellEditable(row, column)&& Character.isDigit(in)) {
+                    model.setValueAt("", row, column);  // Clear the cell value
+                }
+            }
+        });
+
         // Customize table appearance
         table.setFillsViewportHeight(true);
         table.setRowHeight(25);
@@ -101,31 +165,222 @@ public class TableGUI {
         JButton save = new JButton("Save");
         JButton add = new JButton("Add");
         save.addActionListener(e -> {
-            System.out.println("saved");
-            Head.Write(employeeList);
-            Head.saveOrigin(employeeList);
+            boolean hasEmptyFields = false;
 
-        });
-
-        add.addActionListener(e ->{
-            model.addRow(new Object[]{});
-
-            int row = model.getRowCount()-1;
-            if (model.getValueAt(row,0) != null){
-                String n = model.getValueAt(row,0).toString();
-                double r =  Double.parseDouble(model.getValueAt(row,1).toString());
-                double l = Double.parseDouble(model.getValueAt(row,6).toString());
-                double s = Double.parseDouble(model.getValueAt(row,7).toString());
-                double p = Double.parseDouble(model.getValueAt(row,9).toString());
-                Deduction deduction = new Deduction(l,s,p);
-                employeeList.add(new Employees(n,r,deduction));
+            // Check for empty fields in the table
+            for (int row = 0; row < model.getRowCount(); row++) {
+                for (int col = 0; col < model.getColumnCount(); col++) {
+                    if (model.getValueAt(row, col) == null || model.getValueAt(row, col).toString().trim().isEmpty()) {
+                        hasEmptyFields = true;
+                        break;
+                    }
+                }
+                if (hasEmptyFields) break; // Exit loop if an empty cell is found
             }
 
+            // Show a popup if any field is empty
+            if (hasEmptyFields) {
+                JOptionPane.showMessageDialog(frame, "Please ensure all fields are filled before saving.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                // Proceed with saving
+                System.out.println("Saved");
+                Head.Write(employeeList);
+                Head.saveOrigin(employeeList);
+            }
         });
+
+
+
+        add.addActionListener(e -> {
+            // Create a new row in the table model
+
+            // Create a new JFrame for input
+            JFrame input = new JFrame("Input Details");
+            input.setSize(400, 300);
+            input.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            input.setLocationRelativeTo(null);
+
+            // Create a JPanel for the form
+            JPanel panel = new JPanel();
+            panel.setLayout(new GridLayout(6, 2, 5, 5)); // 6 rows, 2 columns, spacing of 5px
+
+            // Add labels and text fields to the panel
+            JLabel nameLabel = new JLabel("Name:");
+            JTextField nameField = new JTextField();
+            panel.add(nameLabel);
+            panel.add(nameField);
+
+            JLabel rateLabel = new JLabel("Rate:");
+            JTextField rateField = new JTextField();
+            rateField.setInputVerifier(new InputVerifier() {
+                @Override
+                public boolean verify(JComponent input) {
+                    String text = ((JTextField) input).getText();
+                    try {
+                        Double.parseDouble(text);
+                        return true;
+                    } catch (NumberFormatException e) {
+                        JOptionPane.showMessageDialog(input, "Please enter a valid number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        return false;
+                    }
+                }
+            });
+            panel.add(rateLabel);
+            panel.add(rateField);
+
+            JLabel loansLabel = new JLabel("Loans:");
+            JTextField loansField = new JTextField();
+            loansField.setInputVerifier(new InputVerifier() {
+                @Override
+                public boolean verify(JComponent input) {
+                    String text = ((JTextField) input).getText();
+                    try {
+                        Double.parseDouble(text);
+                        return true;
+                    } catch (NumberFormatException e) {
+                        JOptionPane.showMessageDialog(input, "Please enter a valid number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        return false;
+                    }
+                }
+            });
+            panel.add(loansLabel);
+            panel.add(loansField);
+
+            JLabel sssLabel = new JLabel("SSS:");
+            JTextField sssField = new JTextField();
+            sssField.setInputVerifier(new InputVerifier() {
+                @Override
+                public boolean verify(JComponent input) {
+                    String text = ((JTextField) input).getText();
+                    try {
+                        Double.parseDouble(text);
+                        return true;
+                    } catch (NumberFormatException e) {
+                        JOptionPane.showMessageDialog(input, "Please enter a valid number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        return false;
+                    }
+                }
+            });
+            panel.add(sssLabel);
+            panel.add(sssField);
+
+            JLabel philhealthLabel = new JLabel("PhilHealth:");
+            JTextField philhealthField = new JTextField();
+            philhealthField.setInputVerifier(new InputVerifier() {
+                @Override
+                public boolean verify(JComponent input) {
+                    String text = ((JTextField) input).getText();
+                    try {
+                        Double.parseDouble(text);
+                        return true;
+                    } catch (NumberFormatException e) {
+                        JOptionPane.showMessageDialog(input, "Please enter a valid number.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        return false;
+                    }
+                }
+            });
+            panel.add(philhealthLabel);
+            panel.add(philhealthField);
+
+            // Add buttons to save or cancel
+            JButton saveButton = new JButton("Save");
+            JButton cancelButton = new JButton("Cancel");
+            panel.add(saveButton);
+            panel.add(cancelButton);
+
+            // Add action listeners for buttons
+            saveButton.addActionListener(ev -> {
+                try {
+                    String name = nameField.getText();
+                    double rate = Double.parseDouble(rateField.getText());
+                    double loans = Double.parseDouble(loansField.getText());
+                    double sss = Double.parseDouble(sssField.getText());
+                    double philhealth = Double.parseDouble(philhealthField.getText());
+
+                    // Add input data to the table row
+                    Deduction deduction = new Deduction(loans, sss, philhealth);
+                    Employees newEmployee = new Employees(name.toUpperCase().trim(), rate, deduction);
+                    employeeList.add(newEmployee);
+
+                    // Add a new row to the table model
+                    Object[] newRow = {
+                            newEmployee.getName(),
+                            newEmployee.getRate(),
+                            "",
+                            newEmployee.getSalary(),
+                            "",
+                            newEmployee.getPayroll().getGrossic(),
+                            newEmployee.getPayroll().getDeduction().getLoans(),
+                            newEmployee.getPayroll().getDeduction().getSss(),
+                            "",
+                            newEmployee.getPayroll().getDeduction().getPhilhealth(),
+                            newEmployee.getPayroll().getDeduction().getTotal(),
+                            newEmployee.getPayroll().getNetic()
+                    };
+                    model.addRow(newRow);
+
+                    // Save the data
+                    Head.saveOrigin(employeeList);
+
+                    input.dispose();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(input, "Please enter valid numeric values for rate, loans, SSS, and PhilHealth.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+
+            cancelButton.addActionListener(ev -> input.dispose());
+
+            // Add the panel to the JFrame and make it visible
+            input.add(panel);
+            input.setVisible(true);
+        });
+
 
 
         bottomPanel.add(add);
         bottomPanel.add(save);
+
+
+        JButton delete = new JButton("Delete");
+        delete.addActionListener(e -> {
+            // Ask for the employee's name to delete
+            String nameToDelete = JOptionPane.showInputDialog(frame, "Enter the name of the employee to delete:", "Delete Employee", JOptionPane.PLAIN_MESSAGE);
+
+            if (nameToDelete != null && !nameToDelete.trim().isEmpty()) {
+                boolean found = false;
+
+                // Iterate through the employeeList to find and delete the employee
+                for (int row = 0; row < employeeList.size(); row++) {
+                    if (employeeList.get(row).getName().equalsIgnoreCase(nameToDelete.trim())) {
+                        found = true;
+
+                        // Remove from the employeeList
+                        employeeList.remove(row);
+
+                        // Remove from the table model
+                        model.removeRow(row);
+
+                        //Updates the list and origin
+
+                        Head.saveOrigin(employeeList);
+
+                        JOptionPane.showMessageDialog(frame, "Employee \"" + nameToDelete + "\" has been deleted.", "Delete Success", JOptionPane.INFORMATION_MESSAGE);
+                        break;
+                    }
+                }
+
+                // If the name was not found
+                if (!found) {
+                    JOptionPane.showMessageDialog(frame, "Employee \"" + nameToDelete + "\" not found.", "Delete Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(frame, "No name entered. Deletion canceled.", "Delete Canceled", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+
+
+        bottomPanel.add(delete);
+
 
 
         // Add the table to a scroll pane
@@ -140,6 +395,8 @@ public class TableGUI {
         // Set the frame to be visible
         frame.setVisible(true);
 
+        frame.setLocationRelativeTo(null);
+
 
     }
 
@@ -147,4 +404,6 @@ public class TableGUI {
     public static void main(String[] args) {
         Head.run();
     }
+
+
 }

@@ -6,20 +6,13 @@ public class Payroll {
     public Payroll(){
         grossic = 0;
         netic = 0;
-    }
-
-    public  Payroll(double grossic, double netic){
-        this.grossic = grossic;
-        this.netic = netic;
+        deduction = new Deduction();
     }
 
 
     //setters
     public void setGrossic(double grossic) {
         this.grossic = grossic;
-    }
-    public void setNetic(double netic) {
-        this.netic = netic;
     }
 
     public void setDeduction(Deduction deduction) {
@@ -39,9 +32,7 @@ public class Payroll {
         return deduction;
     }
 
-    public void computeGross(float rate, float days, float commission){
-        grossic = (rate * days) + commission;
-    }
+
     public void computeNet(){
         netic = grossic - deduction.getTotal();
     }
