@@ -16,17 +16,18 @@ public class TableGUI {
     public TableGUI(ArrayList<Employees> employeeList) {
         // Create the frame
 
+        System.out.println("gui");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 400); // Adjust the size as needed
+        frame.setSize(1200, 400); // Adjust the size as needed
 
         // Create the table model
-        String[] columnNames = new String[12];
-        String[] bar = {"NAME", "RATE", "DAYS", "SALARY", "COMMISSIONS", "GROSS INCOME", "LOANS", "SSS", "OTHERS", "PHILHEALTH", "DEDUCTION", "NET INCOME"};
-        System.arraycopy(bar, 0, columnNames, 0, 12);
+        String[] columnNames = new String[13];
+        String[] bar = {"NAME", "RATE", "DAYS", "SALARY", "COMMISSIONS", "GROSS INCOME", "LOANS", "SSS", "PHILHEALTH","CASH ADVANCED", "OTHERS", "DEDUCTION", "NET INCOME"};
+        System.arraycopy(bar, 0, columnNames, 0, 13);
 
         int i =0;
 
-        Object[][] data = new Object[employeeList.size()+i][12];
+        Object[][] data = new Object[employeeList.size()+i][13];
         for (int row = 0; row < employeeList.size(); row++) {
             data[row][0] = employeeList.get(row).getName();
             data[row][1] = employeeList.get(row).getRate();
@@ -36,17 +37,18 @@ public class TableGUI {
             data[row][5] = employeeList.get(row).getPayroll().getGrossic();
             data[row][6] = employeeList.get(row).getPayroll().getDeduction().getLoans();
             data[row][7] = employeeList.get(row).getPayroll().getDeduction().getSss();
-            data[row][8] = "0";
-            data[row][9] = employeeList.get(row).getPayroll().getDeduction().getPhilhealth();
-            data[row][10] = employeeList.get(row).getPayroll().getDeduction().getTotal();
-            data[row][11] = employeeList.get(row).getPayroll().getNetic();
+            data[row][8] = employeeList.get(row).getPayroll().getDeduction().getPhilhealth();
+            data[row][9] = employeeList.get(row).getPayroll().getDeduction().getCashAdvanced();
+            data[row][10] = employeeList.get(row).getPayroll().getDeduction().getOthers();
+            data[row][11] = employeeList.get(row).getPayroll().getDeduction().getTotal();
+            data[row][12] = employeeList.get(row).getPayroll().getNetic();
         }
 
         DefaultTableModel model = new DefaultTableModel(data, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 // Make only specific columns editable
-                return column != 0 && column != 1 && column != 3 && column != 5&& column != 6 && column != 7 && column != 9 && column != 10 && column != 11;
+                return column != 0 && column != 1 && column != 3 && column != 5&& column != 6 && column != 7 && column != 8 && column != 11 && column != 12;
             }
         };
 
@@ -118,21 +120,27 @@ public class TableGUI {
 
                     double loans = model.getValueAt(row, 6).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 6).toString());
                     double sss = model.getValueAt(row, 7).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 7).toString());
-                    double others = model.getValueAt(row, 8).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 8).toString());
-                    double philhealth = model.getValueAt(row, 9).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 9).toString());
+                    double philhealth = model.getValueAt(row, 8).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 8).toString());
+                    double cashAdvanced = model.getValueAt(row,9).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row,9).toString());
+                    double others = model.getValueAt(row,10).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row,10).toString());
 
-                    Deduction deduction= new Deduction(loans,sss,others,philhealth);
+
+                    Deduction deduction= new Deduction(loans,sss,philhealth,cashAdvanced,others);
                     employeeList.get(row).getPayroll().setDeduction(deduction);
 
                     double totalDeduction = employeeList.get(row).getPayroll().getDeduction().getTotal();
-                    model.setValueAt(totalDeduction, row, 10); // Update DEDUCTION
+                    model.setValueAt(totalDeduction, row, 11); // Update DEDUCTION
 
                     double netIncome = employeeList.get(row).getnet();
-                    model.setValueAt(netIncome, row, 11); // Update NET INCOME
+                    model.setValueAt(netIncome, row, 12); // Update NET INCOME
                 } catch (NumberFormatException ex) {
                     // Handle invalid input gracefully
                     System.err.println("Invalid input in table cell: " + ex.getMessage());
-                } finally {
+                }
+                catch (Exception ex){
+                    ex.printStackTrace();
+                }
+                finally {
                     isUpdating = false;  // Reset the flag after the update is done
                 }
             }
@@ -175,6 +183,8 @@ public class TableGUI {
                     }
                 }
                 if (hasEmptyFields) break; // Exit loop if an empty cell is found
+
+
             }
 
             // Show a popup if any field is empty
@@ -182,9 +192,8 @@ public class TableGUI {
                 JOptionPane.showMessageDialog(frame, "Please ensure all fields are filled before saving.", "Validation Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 // Proceed with saving
+                Head.save(employeeList);
                 System.out.println("Saved");
-                Head.Write(employeeList);
-                Head.saveOrigin(employeeList);
             }
         });
 
@@ -305,21 +314,24 @@ public class TableGUI {
                     Object[] newRow = {
                             newEmployee.getName(),
                             newEmployee.getRate(),
-                            "",
+                            "0",
                             newEmployee.getSalary(),
-                            "",
+                            "0",
                             newEmployee.getPayroll().getGrossic(),
                             newEmployee.getPayroll().getDeduction().getLoans(),
                             newEmployee.getPayroll().getDeduction().getSss(),
-                            "",
                             newEmployee.getPayroll().getDeduction().getPhilhealth(),
+                            "0",
+                            "0",
                             newEmployee.getPayroll().getDeduction().getTotal(),
                             newEmployee.getPayroll().getNetic()
                     };
                     model.addRow(newRow);
 
                     // Save the data
-                    Head.saveOrigin(employeeList);
+                    Head.add(employeeList);
+                    Head.save(employeeList);
+
 
                     input.dispose();
                 } catch (NumberFormatException ex) {
@@ -361,7 +373,7 @@ public class TableGUI {
 
                         //Updates the list and origin
 
-                        Head.saveOrigin(employeeList);
+
 
                         JOptionPane.showMessageDialog(frame, "Employee \"" + nameToDelete + "\" has been deleted.", "Delete Success", JOptionPane.INFORMATION_MESSAGE);
                         break;

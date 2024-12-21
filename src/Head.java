@@ -1,68 +1,45 @@
-import java.io.*;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.sql.*;
 import java.util.ArrayList;
 
 public class Head {
-    static String newDirectoryPath;
-    public static void run() {
+    static Connection conn;
+    static ResultSet rs;
 
+    public static void run() {
+        System.out.println("head");
 
         ArrayList<Employees> employee = new ArrayList<>();
 
+        //Sql access
+        String url = "jdbc:mysql://localhost:3306/Payroll";  // Replace with your DB details
+        String user = "root";  // Replace with your MySQL username
+        String password = "722811@";  // Replace with your MySQL password
 
-        String userHome = System.getProperty("user.home");
-        String documentsPath = userHome + File.separator + "Documents";
-        String newDirectoryName = "Payroll Archives";
-        newDirectoryPath = documentsPath + File.separator + newDirectoryName;
-        File newDirectory = new File(newDirectoryPath);
+        try {
+            // Load MySQL JDBC driver (optional in newer versions)
+            Class.forName("com.mysql.cj.jdbc.Driver");
 
-        System.out.println("User Home: " + userHome);
-        System.out.println("Documents Path: " + documentsPath);
-        System.out.println("New Directory Path: " + newDirectoryPath);
+            // Establish a connection
+            conn = DriverManager.getConnection(url, user, password);
 
-        if (newDirectory.exists()) {
-            System.out.println("Directory already exists: " + newDirectory.getAbsolutePath());
-        } else if (newDirectory.mkdirs()) {
-            System.out.println("Directory successfully created at: " + newDirectory.getAbsolutePath());
-        } else {
-            System.out.println("Failed to create directory at: " + newDirectory.getAbsolutePath());
+            System.out.println("Connected to MySQL database!");
+
+            rs = conn.createStatement().executeQuery("SELECT * FROM EMPLOYEE");
+            while (rs.next()) {
+                Deduction deduction = new Deduction(rs.getDouble("Loans"), rs.getDouble("SSS"),rs.getDouble("PhilHealth"),rs.getDouble("CashAdvanced"),rs.getDouble("Others") );
+                Payroll payroll = new Payroll(rs.getDouble("Gross"),rs.getDouble("NetIncome"),deduction);
+                employee.add(new Employees(rs.getString("Name"),rs.getDouble("Rate"),rs.getDouble("NoOfDays"),rs.getDouble("Salary"),rs.getDouble("Commissions"),payroll));
+
+
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
 
-        String textFilePath = newDirectoryPath + File.separator + "testfile.txt";
-        File FileRead = new File(textFilePath);
+
 
         try {
             int i = 1;
-            BufferedReader reader = new BufferedReader(new FileReader(FileRead));
-            String line = reader.readLine();
-
-            while (line != null) {
-                // Split the line by backticks (`) without limiting the number of parts
-                String[] read = line.split("`");
-
-                // Check if there are at least 7 parts in the read array (or handle missing parts gracefully)
-                if (read.length >= 7) {
-                    // Parse the deduction values
-                    int loans = Integer.parseInt(read[4]);
-                    int sss = Integer.parseInt(read[5]);
-                    int philhealth = Integer.parseInt(read[6]);
-
-                    // Create a new Deduction object
-                    Deduction deduction = new Deduction(loans, sss, philhealth);
-
-                    // Create a new Employee object with the parsed data
-                    employee.add(new Employees(read[0], Integer.parseInt(read[1]), Integer.parseInt(read[2]), Integer.parseInt(read[3]), deduction));
-                } else {
-                    // Handle cases where there aren't enough fields (this should ideally not happen if the data is well-formed)
-                    System.err.println("Skipping invalid line: " + line);
-                }
-                System.out.println(i);
-
-                // Read the next line
-                line = reader.readLine();
-                i++;
-            }
 
             // Create the TableGUI with the list of employees
             new TableGUI(employee);
@@ -76,60 +53,92 @@ public class Head {
             System.out.println(e.getMessage());
         }
 
-
-
     }
 
-    public static void Write(ArrayList<Employees> employees){
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM");
-        LocalDate date = LocalDate.now();
-        String sdate = date.format(formatter);
-        String[] tdate = sdate.split("-");
-        String filedate = sdate + ".txt";
-        String TextFileWrite = newDirectoryPath + File.separator + filedate;
-        File FileOut = new File(TextFileWrite);
+    public static void save(ArrayList<Employees> employee) {
+        String sql = "UPDATE EMPLOYEE SET " +
+                "Name = ?, Rate = ?, NoOfDays = ?, Salary = ?, Commissions = ?, " +
+                "Gross = ?, Loans = ?, SSS = ?, PhilHealth = ?, CashAdvanced = ?, " +
+                "Others = ?, TotalDeduction = ?, NetIncome = ? " +
+                "WHERE EmpId = ?";
 
-        System.out.println("write file to archived");
-        try {
-            if (FileOut.createNewFile()) {
-                System.out.println("File created: " + FileOut.getAbsolutePath());
-            } else {
-                System.out.println("File already exists: " + FileOut.getAbsolutePath());
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            int i = 1;
+            for (Employees payroll : employee) {
+                // Set parameters for each column
+                pstmt.setString(1, payroll.getName());
+                pstmt.setDouble(2, payroll.getRate());
+                pstmt.setDouble(3, payroll.getDays());
+                pstmt.setDouble(4, payroll.getSalary());
+                pstmt.setDouble(5, payroll.getCommission());
+                pstmt.setDouble(6, payroll.getPayroll().getGrossic());
+                pstmt.setDouble(7, payroll.getPayroll().getDeduction().getLoans());
+                pstmt.setDouble(8, payroll.getPayroll().getDeduction().getSss());
+                pstmt.setDouble(9, payroll.getPayroll().getDeduction().getPhilhealth());
+                pstmt.setDouble(10, payroll.getPayroll().getDeduction().getCashAdvanced());
+                pstmt.setDouble(11, payroll.getPayroll().getDeduction().getOthers());
+                pstmt.setDouble(12, payroll.getPayroll().getDeduction().getTotal());
+                pstmt.setDouble(13, payroll.getPayroll().getNetic());
+
+                // Set the EmpId for the WHERE clause
+                pstmt.setInt(14, i);
+
+                System.out.println(i);
+                i++;
+
+                // Add to batch
+                pstmt.addBatch();
             }
-            BufferedWriter writer = new BufferedWriter(new FileWriter(FileOut));
 
-            for(int i = 0 ; i < employees.size(); i++){
-                writer.write(employees.get(i).toString());
-                writer.newLine();
-            }
+            // Execute batch update
+            pstmt.executeUpdate();
+            System.out.println("Payroll list updated successfully!");
 
-            writer.close();
-
-        }catch (Exception e){
-            System.out.println(e.getMessage());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    public static void saveOrigin(ArrayList<Employees> employees){
-        String FileOut = newDirectoryPath + File.separator + "testfile.txt";
-        System.out.println("updated origin");
+    public static void add(ArrayList<Employees> employee){
 
-        try {
+        String sql = "INSERT EMPLOYEE SET " +
+                "Name = ?, Rate = ?, NoOfDays = ?, Salary = ?, Commissions = ?, " +
+                "Gross = ?, Loans = ?, SSS = ?, PhilHealth = ?, CashAdvanced = ?, " +
+                "Others = ?, TotalDeduction = ?, NetIncome = ? ";
 
-            BufferedWriter writer = new BufferedWriter(new FileWriter(FileOut));
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            int i = 1;
+                // Set parameters for each column
+                pstmt.setString(1, employee.getLast().getName());
+                pstmt.setDouble(2, employee.getLast().getRate());
+                pstmt.setDouble(3, employee.getLast().getDays());
+                pstmt.setDouble(4, employee.getLast().getSalary());
+                pstmt.setDouble(5, employee.getLast().getCommission());
+                pstmt.setDouble(6, employee.getLast().getPayroll().getGrossic());
+                pstmt.setDouble(7, employee.getLast().getPayroll().getDeduction().getLoans());
+                pstmt.setDouble(8, employee.getLast().getPayroll().getDeduction().getSss());
+                pstmt.setDouble(9, employee.getLast().getPayroll().getDeduction().getPhilhealth());
+                pstmt.setDouble(10, employee.getLast().getPayroll().getDeduction().getCashAdvanced());
+                pstmt.setDouble(11, employee.getLast().getPayroll().getDeduction().getOthers());
+                pstmt.setDouble(12, employee.getLast().getPayroll().getDeduction().getTotal());
+                pstmt.setDouble(13, employee.getLast().getPayroll().getNetic());
 
-            for (int i = 0; i < employees.size(); i++) {
-                writer.write(employees.get(i).toSaveOrigin());
-                writer.newLine();
-            }
-            writer.close();
-        }catch (Exception e){
-            System.out.println(e.getMessage());
+                System.out.println(i);
+                i++;
+
+                // Add to batch
+                pstmt.addBatch();
+
+            // Execute batch update
+            pstmt.executeUpdate();
+            System.out.println("Payroll list updated successfully!");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
     }
 
-    public static void reada(String loc,String week){
-        String filein = newDirectoryPath + File.separator + loc;
-    }
+
+
 }

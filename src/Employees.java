@@ -16,16 +16,13 @@ public class Employees {
         this.payroll.setDeduction(deduction);
 
     }
-    public  Employees(String name, double rate,double days,double commission,Deduction deduction){
+    public  Employees(String name, double rate,double days,double salary,double commission,Payroll payroll){
         this.name = name;
         this.rate = rate;
         this.days = days;
         this.commission = commission;
-        this.payroll = new Payroll();
-        computeGross();
-        payroll.computeNet();
-        this.payroll.setDeduction(deduction);
-
+        this.salary = salary;
+        this.payroll = payroll;
 
     }
 
@@ -68,7 +65,7 @@ public class Employees {
     }
 
     public void computeGross(){
-        payroll.setGrossic((rate*days)+ commission);
+        payroll.setGrossic(salary+ commission);
     }
     public double getnet(){
         return payroll.getNetic();

@@ -3,20 +3,24 @@ public class Deduction {
     private double philhealth;
     private double loans;
     private double others;
+    private double cashAdvanced;
 
     //constructors
-    public Deduction(){
+    public Deduction() {
+        loans = 0; // Default values
         sss = 0;
         philhealth = 0;
-        loans = 0;
+        cashAdvanced = 0;
         others = 0;
     }
 
-    public Deduction(double loans, double sss, double others, double philhealth){
+
+    public Deduction(double loans, double sss, double philhealth, double cashAdvanced,double others){
         this.sss = sss;
         this.philhealth = philhealth;
         this.loans = loans;
         this.others = others;
+        this.cashAdvanced = cashAdvanced;
     }
     public Deduction(double loans, double sss, double philhealth){
         this.sss = sss;
@@ -37,9 +41,18 @@ public class Deduction {
     public double getLoans() {
         return loans;
     }
-   //get total
+
+    public double getCashAdvanced() {
+        return cashAdvanced;
+    }
+
+    public double getOthers() {
+        return others;
+    }
+
+    //get total
     public double getTotal(){
-        return sss+philhealth+loans+others;
+        return sss+philhealth+loans+others+cashAdvanced;
     }
 
 

@@ -9,6 +9,12 @@ public class Payroll {
         deduction = new Deduction();
     }
 
+    public Payroll(double grossic, double netic, Deduction deduction){
+        this.grossic = grossic;
+        this.netic = netic;
+        this.deduction = deduction;
+    }
+
 
     //setters
     public void setGrossic(double grossic) {
