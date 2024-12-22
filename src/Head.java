@@ -1,5 +1,7 @@
 import java.sql.*;
 import java.util.ArrayList;
+import  java.util.Date;
+import java.util.Calendar;
 
 public class Head {
     static Connection conn;
@@ -9,6 +11,9 @@ public class Head {
         System.out.println("head");
 
         ArrayList<Employees> employee = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        System.out.println(calendar.get(Calendar.WEEK_OF_MONTH));
+
 
         //Sql access
         String url = "jdbc:mysql://localhost:3306/Payroll";  // Replace with your DB details
@@ -28,7 +33,7 @@ public class Head {
             while (rs.next()) {
                 Deduction deduction = new Deduction(rs.getDouble("Loans"), rs.getDouble("SSS"),rs.getDouble("PhilHealth"),rs.getDouble("CashAdvanced"),rs.getDouble("Others") );
                 Payroll payroll = new Payroll(rs.getDouble("Gross"),rs.getDouble("NetIncome"),deduction);
-                employee.add(new Employees(rs.getString("Name"),rs.getDouble("Rate"),rs.getDouble("NoOfDays"),rs.getDouble("Salary"),rs.getDouble("Commissions"),payroll));
+                employee.add(new Employees(rs.getInt("EmpId"),rs.getString("Name"),rs.getDouble("Rate"),rs.getDouble("NoOfDays"),rs.getDouble("Salary"),rs.getDouble("Commissions"),payroll));
 
 
             }
@@ -55,7 +60,7 @@ public class Head {
 
     }
 
-    public static void save(ArrayList<Employees> employee) {
+    public static void saveOrigin(ArrayList<Employees> employee) {
         String sql = "UPDATE EMPLOYEE SET " +
                 "Name = ?, Rate = ?, NoOfDays = ?, Salary = ?, Commissions = ?, " +
                 "Gross = ?, Loans = ?, SSS = ?, PhilHealth = ?, CashAdvanced = ?, " +
@@ -79,6 +84,54 @@ public class Head {
                 pstmt.setDouble(11, payroll.getPayroll().getDeduction().getOthers());
                 pstmt.setDouble(12, payroll.getPayroll().getDeduction().getTotal());
                 pstmt.setDouble(13, payroll.getPayroll().getNetic());
+
+                // Set the EmpId for the WHERE clause
+                pstmt.setInt(14, i);
+
+                System.out.println(i);
+                i++;
+
+                // Add to batch
+                pstmt.addBatch();
+            }
+
+            // Execute batch update
+            pstmt.executeUpdate();
+            System.out.println("Payroll list updated successfully!");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void save(ArrayList<Employees> employee) {
+
+        Date date = new Date();
+        Calendar calendar = Calendar.getInstance();
+        System.out.println(calendar.get(Calendar.WEEK_OF_MONTH));
+        String sql = "UPDATE EMPLOYEE SET " +
+                "Name = ?, Rate = ?, NoOfDays = ?, Salary = ?, Commissions = ?, " +
+                "Gross = ?, Loans = ?, SSS = ?, PhilHealth = ?, CashAdvanced = ?, " +
+                "Others = ?, TotalDeduction = ?, NetIncome = ?, Date = ? " +
+                "WHERE EmpId = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            int i = 1;
+            for (Employees payroll : employee) {
+                // Set parameters for each column
+                pstmt.setString(1, payroll.getName());
+                pstmt.setDouble(2, payroll.getRate());
+                pstmt.setDouble(3, payroll.getDays());
+                pstmt.setDouble(4, payroll.getSalary());
+                pstmt.setDouble(5, payroll.getCommission());
+                pstmt.setDouble(6, payroll.getPayroll().getGrossic());
+                pstmt.setDouble(7, payroll.getPayroll().getDeduction().getLoans());
+                pstmt.setDouble(8, payroll.getPayroll().getDeduction().getSss());
+                pstmt.setDouble(9, payroll.getPayroll().getDeduction().getPhilhealth());
+                pstmt.setDouble(10, payroll.getPayroll().getDeduction().getCashAdvanced());
+                pstmt.setDouble(11, payroll.getPayroll().getDeduction().getOthers());
+                pstmt.setDouble(12, payroll.getPayroll().getDeduction().getTotal());
+                pstmt.setDouble(13, payroll.getPayroll().getNetic());
+
 
                 // Set the EmpId for the WHERE clause
                 pstmt.setInt(14, i);
@@ -132,6 +185,29 @@ public class Head {
             // Execute batch update
             pstmt.executeUpdate();
             System.out.println("Payroll list updated successfully!");
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static void delete(Employees employee){
+        String sql = "DELETE FROM EMPLOYEE WHERE EmpId = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Set the EmpId parameter
+             // Replace with the actual EmpId to delete
+            pstmt.setInt(1, employee.getEmpid());
+
+            // Execute the DELETE query
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Row deleted successfully!");
+            } else {
+                System.out.println("No row found with the given EmpId.");
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();

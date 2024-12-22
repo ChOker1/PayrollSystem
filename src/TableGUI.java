@@ -2,7 +2,6 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -192,7 +191,7 @@ public class TableGUI {
                 JOptionPane.showMessageDialog(frame, "Please ensure all fields are filled before saving.", "Validation Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 // Proceed with saving
-                Head.save(employeeList);
+                Head.saveOrigin(employeeList);
                 System.out.println("Saved");
             }
         });
@@ -330,7 +329,7 @@ public class TableGUI {
 
                     // Save the data
                     Head.add(employeeList);
-                    Head.save(employeeList);
+                    Head.saveOrigin(employeeList);
 
 
                     input.dispose();
@@ -364,6 +363,8 @@ public class TableGUI {
                 for (int row = 0; row < employeeList.size(); row++) {
                     if (employeeList.get(row).getName().equalsIgnoreCase(nameToDelete.trim())) {
                         found = true;
+
+                        Head.delete(employeeList.get(row));
 
                         // Remove from the employeeList
                         employeeList.remove(row);

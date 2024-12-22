@@ -1,6 +1,7 @@
 public class Employees {
 
     private String name;
+    private int empid;
     private double rate;
     private double days;
     private double commission;
@@ -16,7 +17,8 @@ public class Employees {
         this.payroll.setDeduction(deduction);
 
     }
-    public  Employees(String name, double rate,double days,double salary,double commission,Payroll payroll){
+    public  Employees(int empid,String name, double rate,double days,double salary,double commission,Payroll payroll){
+        this.empid = empid;
         this.name = name;
         this.rate = rate;
         this.days = days;
@@ -64,6 +66,10 @@ public class Employees {
         return salary;
     }
 
+    public int getEmpid() {
+        return empid;
+    }
+
     public void computeGross(){
         payroll.setGrossic(salary+ commission);
     }
@@ -74,11 +80,7 @@ public class Employees {
 
     @Override
     public String toString(){
-        return name + "`" + (int)rate + "`" + (int)days + "`" + (int)salary+ "`" + (int)commission + "`" + (int)payroll.getGrossic() + "`" + payroll.getDeduction().toString() + "`" + (int)payroll.getNetic();
-    }
-
-    public String toSaveOrigin(){
-        return name + "`" + (int)rate + "`" + (int)days + "`" +  (int)commission + "`" + payroll.getDeduction().toStringOrigin();
+        return empid + " " + name + "`" + (int)rate + "`" + (int)days + "`" + (int)salary+ "`" + (int)commission + "`" + (int)payroll.getGrossic() + "`" + payroll.getDeduction().toString() + "`" + (int)payroll.getNetic();
     }
 
 }
