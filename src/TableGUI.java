@@ -67,7 +67,7 @@ public class TableGUI {
                 // Check if the "Days" column (index 2) value is 0
                 if (table.getValueAt(row, 2) != null && Double.parseDouble(table.getValueAt(row, 2).toString()) == 0) {
                     // Set the entire row's background color to red
-                    cellComponent.setBackground(Color.red);
+                    cellComponent.setBackground(Color.orange);
                 } else {
                     // Set default background for editable and non-editable cells
                     if (table.isCellEditable(row, column)) {
@@ -192,6 +192,7 @@ public class TableGUI {
             } else {
                 // Proceed with saving
                 Head.saveOrigin(employeeList);
+                Head.save(employeeList);
                 System.out.println("Saved");
             }
         });
@@ -329,7 +330,8 @@ public class TableGUI {
 
                     // Save the data
                     Head.add(employeeList);
-                    Head.saveOrigin(employeeList);
+
+
 
 
                     input.dispose();
