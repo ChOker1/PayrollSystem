@@ -28,6 +28,28 @@ public class Deduction {
         this.loans = loans;
     }
 
+    //setters
+
+
+    public void addLoans(double loans) {
+        this.loans = this.loans + loans;
+    }
+
+    public void addSss(double sss) {
+        this.sss = this.sss + sss;
+    }
+
+    public void addPhilhealth(double philhealth) {
+        this.philhealth = this.philhealth + philhealth;
+    }
+
+    public void addCashAdvanced(double cashAdvanced) {
+        this.cashAdvanced = this.cashAdvanced + cashAdvanced;
+    }
+
+    public void addOthers(double others) {
+        this.others = this.others + others;
+    }
 
     //getters
     public double getSss() {

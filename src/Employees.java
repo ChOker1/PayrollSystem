@@ -39,6 +39,18 @@ public class Employees {
         this.commission = commission;
     }
 
+    public void addDays(double days) {
+        this.days = this.days + days;
+    }
+
+    public void addCommission(double commission) {
+        this.commission = this.commission + commission;
+    }
+
+    public void addSalary(double salary) {
+        this.salary = this.salary + salary;
+    }
+
     //getters
 
     public double getRate() {

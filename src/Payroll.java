@@ -25,6 +25,16 @@ public class Payroll {
         this.deduction = deduction;
     }
 
+    public void addGrossic(double grossic) {
+        this.grossic = this.grossic + grossic;
+    }
+
+    public void addNetic(double netic) {
+        this.netic = this.netic + netic;
+    }
+
+
+
     // getters
     public double getGrossic() {
         return grossic;

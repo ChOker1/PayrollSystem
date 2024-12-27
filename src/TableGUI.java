@@ -4,20 +4,23 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class TableGUI {
     private boolean isUpdating = false;
-    private static JFrame frame = new JFrame("Payroll");// Declare the flag at the class level
+    private static JFrame createFrame = new JFrame("Payroll");// Declare the flag at the class level
 
     public TableGUI(ArrayList<Employees> employeeList) {
         // Create the frame
 
         System.out.println("gui");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1200, 400); // Adjust the size as needed
+        createFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        createFrame.setSize(1200, 400); // Adjust the size as needed
 
         // Create the table model
         String[] columnNames = new String[13];
@@ -188,7 +191,7 @@ public class TableGUI {
 
             // Show a popup if any field is empty
             if (hasEmptyFields) {
-                JOptionPane.showMessageDialog(frame, "Please ensure all fields are filled before saving.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(createFrame, "Please ensure all fields are filled before saving.", "Validation Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 // Proceed with saving
                 Head.saveOrigin(employeeList);
@@ -349,14 +352,13 @@ public class TableGUI {
 
 
 
-        bottomPanel.add(add);
-        bottomPanel.add(save);
+
 
 
         JButton delete = new JButton("Delete");
         delete.addActionListener(e -> {
             // Ask for the employee's name to delete
-            String nameToDelete = JOptionPane.showInputDialog(frame, "Enter the name of the employee to delete:", "Delete Employee", JOptionPane.PLAIN_MESSAGE);
+            String nameToDelete = JOptionPane.showInputDialog(createFrame, "Enter the name of the employee to delete:", "Delete Employee", JOptionPane.PLAIN_MESSAGE);
 
             if (nameToDelete != null && !nameToDelete.trim().isEmpty()) {
                 boolean found = false;
@@ -378,22 +380,31 @@ public class TableGUI {
 
 
 
-                        JOptionPane.showMessageDialog(frame, "Employee \"" + nameToDelete + "\" has been deleted.", "Delete Success", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(createFrame, "Employee \"" + nameToDelete + "\" has been deleted.", "Delete Success", JOptionPane.INFORMATION_MESSAGE);
                         break;
                     }
                 }
 
                 // If the name was not found
                 if (!found) {
-                    JOptionPane.showMessageDialog(frame, "Employee \"" + nameToDelete + "\" not found.", "Delete Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(createFrame, "Employee \"" + nameToDelete + "\" not found.", "Delete Error", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
-                JOptionPane.showMessageDialog(frame, "No name entered. Deletion canceled.", "Delete Canceled", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(createFrame, "No name entered. Deletion canceled.", "Delete Canceled", JOptionPane.WARNING_MESSAGE);
             }
         });
 
+        JButton ok = new JButton("Ok");
+        ok.addActionListener(e -> {
+            createFrame.dispose();
+            run();
+        });
 
+
+        bottomPanel.add(add);
         bottomPanel.add(delete);
+        bottomPanel.add(save);
+        bottomPanel.add(ok);
 
 
 
@@ -405,18 +416,254 @@ public class TableGUI {
         mainPanel.add(scrollPane, BorderLayout.CENTER);
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
         // Add the scroll pane to the frame
-        frame.add(mainPanel);
+        createFrame.add(mainPanel);
         // Set the frame to be visible
-        frame.setVisible(true);
+        createFrame.setVisible(true);
 
-        frame.setLocationRelativeTo(null);
+        createFrame.setLocationRelativeTo(null);
 
 
     }
 
 
-    public static void main(String[] args) {
+    //vew methods
+    public static void createMultiDatePicker() {
+        JFrame frame = new JFrame("Multi-Date Picker");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+        frame.setSize(600, 500);
+        frame.setLocationRelativeTo(null);
+
+        JPanel calendarPanel = new JPanel(new BorderLayout());
+        JLabel selectedDatesLabel = createSelectedDatesLabel();
+        JPanel footerPanel = createFooterPanel(frame, selectedDatesLabel);
+
+        // Shared state across months
+        Set<LocalDate> selectedDates = new HashSet<>();
+        final LocalDate[] range = new LocalDate[2]; // Stores the range (start, end)
+
+        // Initialize the calendar with the current month
+        updateCalendarPanel(calendarPanel, LocalDate.now(), selectedDates, range, selectedDatesLabel);
+
+        frame.add(calendarPanel, BorderLayout.CENTER);
+        frame.add(footerPanel, BorderLayout.SOUTH);
+
+        frame.setVisible(true);
+    }
+
+    private static JPanel headerPanel = null;
+
+    private static void updateCalendarPanel(JPanel calendarPanel, LocalDate currentMonth, Set<LocalDate> selectedDates,
+                                            LocalDate[] range, JLabel selectedDatesLabel) {
+        calendarPanel.removeAll();  // Clear the panel
+
+        // Create header panel if it doesn't exist yet
+        if (headerPanel == null) {
+            headerPanel = createHeaderPanel(currentMonth, selectedDates, range, selectedDatesLabel);
+        } else {
+            // Update the existing header panel
+            JLabel monthLabel = (JLabel) headerPanel.getComponent(1); // Get the month label
+            monthLabel.setText(currentMonth.getMonth() + " " + currentMonth.getYear());
+        }
+
+        // Create and add the grid panel
+        JPanel gridPanel = createCalendarGrid(currentMonth, selectedDates, range, selectedDatesLabel);
+        calendarPanel.add(headerPanel, BorderLayout.NORTH);
+        calendarPanel.add(gridPanel, BorderLayout.CENTER);
+
+        calendarPanel.revalidate();
+        calendarPanel.repaint();
+    }
+
+    private static JPanel createHeaderPanel(LocalDate currentMonth, Set<LocalDate> selectedDates,
+                                            LocalDate[] range, JLabel selectedDatesLabel) {
+        JPanel headerPanel = new JPanel(new BorderLayout());
+
+        JButton prevButton = new JButton("<<");
+        JButton nextButton = new JButton(">>");
+        JLabel monthLabel = new JLabel(currentMonth.getMonth() + " " + currentMonth.getYear(), SwingConstants.CENTER);
+
+        prevButton.addActionListener(e -> updateCalendarPanel((JPanel) headerPanel.getParent(), currentMonth.minusMonths(1),
+                selectedDates, range, selectedDatesLabel));
+        nextButton.addActionListener(e -> updateCalendarPanel((JPanel) headerPanel.getParent(), currentMonth.plusMonths(1),
+                selectedDates, range, selectedDatesLabel));
+
+        headerPanel.add(prevButton, BorderLayout.WEST);
+        headerPanel.add(monthLabel, BorderLayout.CENTER);
+        headerPanel.add(nextButton, BorderLayout.EAST);
+
+        return headerPanel;
+    }
+
+    private static JPanel createCalendarGrid(LocalDate currentMonth, Set<LocalDate> selectedDates,
+                                             LocalDate[] range, JLabel selectedDatesLabel) {
+        JPanel gridPanel = new JPanel();
+        gridPanel.setLayout(new BorderLayout());
+
+        // Add Day of the Week Indicator (This will not be duplicated)
+        JPanel weekHeaderPanel = new JPanel(new GridLayout(1, 7));
+        String[] dayOfWeekNames = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        for (String day : dayOfWeekNames) {
+            JLabel dayLabel = new JLabel(day, SwingConstants.CENTER);
+            weekHeaderPanel.add(dayLabel);
+        }
+        gridPanel.add(weekHeaderPanel, BorderLayout.NORTH);
+
+        // Create the main calendar grid with 7 rows and 7 columns
+        JPanel calendarGrid = new JPanel(new GridLayout(7, 7));  // 7 rows and 7 columns
+        LocalDate firstDayOfMonth = currentMonth.withDayOfMonth(1);
+        int startDay = firstDayOfMonth.getDayOfWeek().getValue() % 7; // Adjust for Sunday=0
+        int daysInMonth = currentMonth.lengthOfMonth();
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        // Clear the calendar grid before adding new days
+        calendarGrid.removeAll();
+
+        // Add empty placeholders for days before the start of the month
+        for (int i = 0; i < startDay; i++) {
+            calendarGrid.add(new JLabel()); // Empty cell for days before the month starts
+        }
+
+        // Add buttons for each day of the month
+        for (int day = 1; day <= daysInMonth; day++) {
+            LocalDate date = currentMonth.withDayOfMonth(day);
+            JButton dayButton = new JButton(String.valueOf(day));
+
+            // Reset the button color to default for non-selected days
+            dayButton.setBackground(null);
+
+            // Highlight if date is in the selected range
+            if (selectedDates.contains(date)) {
+                dayButton.setBackground(Color.CYAN);
+            }
+
+            dayButton.addActionListener(e -> {
+                if (range[0] == null || range[1] != null) {
+                    // Reset the range and select the first date
+                    range[0] = date;
+                    range[1] = null;
+                    selectedDates.clear();
+                    selectedDates.add(date);
+                } else {
+                    // Select the second date and highlight the range
+                    range[1] = date;
+
+                    LocalDate start = range[0].isBefore(range[1]) ? range[0] : range[1];
+                    LocalDate end = range[0].isBefore(range[1]) ? range[1] : range[0];
+
+                    selectedDates.clear();
+                    while (!start.isAfter(end)) {
+                        selectedDates.add(start);
+                        start = start.plusDays(1);
+                    }
+                }
+
+                // Refresh the grid to update button highlights
+                updateCalendarPanel((JPanel) calendarGrid.getParent(), currentMonth, selectedDates, range, selectedDatesLabel);
+                updateSelectedDatesLabel(selectedDates, selectedDatesLabel, dateFormatter);
+            });
+
+            calendarGrid.add(dayButton);
+        }
+
+        // Add empty placeholders after the last day to ensure 7 rows
+        int remainingCells = (startDay + daysInMonth) % 7;
+        for (int i = remainingCells; i < 7 && i != 0; i++) {
+            calendarGrid.add(new JLabel());
+        }
+
+        // Ensure the grid has exactly 7 rows (49 cells)
+        while (calendarGrid.getComponentCount() < 49) {
+            calendarGrid.add(new JLabel()); // Add empty labels to fill up the grid
+        }
+
+        // Add the calendar grid to the panel
+        gridPanel.add(calendarGrid, BorderLayout.CENTER);
+        return gridPanel;
+    }
+
+
+
+    private static JLabel createSelectedDatesLabel() {
+        JLabel selectedDatesLabel = new JLabel("Selected Dates: None");
+        selectedDatesLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        return selectedDatesLabel;
+    }
+
+    private static JPanel createFooterPanel(JFrame frame, JLabel selectedDatesLabel) {
+        JPanel footerPanel = new JPanel(new BorderLayout());
+
+        // Place selected dates label on the left side
+        footerPanel.add(selectedDatesLabel, BorderLayout.CENTER);
+
+        // Create the OK button on the right side
+        JButton okButton = new JButton("OK");
+        okButton.setPreferredSize(new Dimension(80, 30));
+
+        // Action listener for OK button
+        okButton.addActionListener(e -> {
+            LocalDate start = null, end = null;
+            // Extract the selected start and end dates
+            if (!selectedDatesLabel.getText().equals("Selected Dates: None")) {
+                String selectedText = selectedDatesLabel.getText().replace("Selected Dates: ", "");
+                String[] dates = selectedText.split(" to ");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                if (dates.length == 2) {
+                    start = LocalDate.parse(dates[0], formatter);
+                    end = LocalDate.parse(dates[1], formatter);
+                }
+            }
+
+            // Check if the dates were parsed correctly and assign them
+            if (start != null && end != null) {
+                System.out.println("Start: " + start);
+                System.out.println("End: " + end);
+                Head.view(start,end);
+            } else {
+                JOptionPane.showMessageDialog(frame, "No valid date range selected!");
+            }
+            frame.dispose(); // Close the application after selecting dates
+        });
+
+        // Add OK button to the right side
+        footerPanel.add(okButton, BorderLayout.EAST);
+
+        return footerPanel;
+    }
+
+    private static void updateSelectedDatesLabel(Set<LocalDate> selectedDates, JLabel selectedDatesLabel,
+                                                 DateTimeFormatter dateFormatter) {
+        if (selectedDates.isEmpty()) {
+            selectedDatesLabel.setText("Selected Dates: None");
+        } else {
+            LocalDate start = selectedDates.stream().min(LocalDate::compareTo).orElse(null);
+            LocalDate end = selectedDates.stream().max(LocalDate::compareTo).orElse(null);
+
+            if (start != null && end != null) {
+                selectedDatesLabel.setText("Selected Dates: " + start.format(dateFormatter) + " to " + end.format(dateFormatter));
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+    //Main
+    public static void run() {
+        ArrayList<Employees>employee = new ArrayList<>();
+
         JFrame sframe = new JFrame();
+
+        sframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        sframe.setSize(400,300);
+        sframe.setLocationRelativeTo(null);
+
+
         JPanel main = new JPanel();
         JPanel start = new JPanel();
         JLabel label = new JLabel("Welcome to Yamban Payroll System");
@@ -424,7 +671,7 @@ public class TableGUI {
         create.addActionListener(e ->{
 
             sframe.dispose();
-            Head.run();
+            Head.run(employee);
 
 
         });
@@ -433,6 +680,9 @@ public class TableGUI {
 
         JButton viewr = new JButton("View Recent");
         viewr.addActionListener(e -> {
+            sframe.dispose();
+            SwingUtilities.invokeLater(() -> createMultiDatePicker());
+
 
         });
 
@@ -449,19 +699,11 @@ public class TableGUI {
 
         sframe.add(main);
 
-
-
         sframe.setVisible(true);
-        sframe.setLocationRelativeTo(null);
-        sframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        sframe.setSize(700,500);
-
-
-
-
-
 
     }
 
-
+    public static void main(String[] args) {
+        run();
+    }
 }

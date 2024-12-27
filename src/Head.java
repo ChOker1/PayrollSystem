@@ -9,10 +9,9 @@ public class Head {
     static Connection conn;
     static ResultSet employeers;
 
-    public static void run() {
+    public static void run(ArrayList<Employees> employee) {
         System.out.println("head");
 
-        ArrayList<Employees> employee = new ArrayList<>();
 
         LocalDate now = LocalDate.now();
         System.out.println(now);
@@ -71,6 +70,8 @@ public class Head {
     }
 
     public static void saveOrigin(ArrayList<Employees> employee) {
+
+
         String sql = "UPDATE EMPLOYEE SET " +
                 "Name = ?, Rate = ?, NoOfDays = ?, Salary = ?, Commissions = ?, " +
                 "Gross = ?, Loans = ?, SSS = ?, PhilHealth = ?, CashAdvanced = ?, " +
@@ -79,6 +80,8 @@ public class Head {
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             for (Employees payroll : employee) {
+                System.out.println(payroll.getName());
+                System.out.println(payroll.toString());
                 // Set parameters for each column
                 pstmt.setString(1, payroll.getName());
                 pstmt.setDouble(2, payroll.getRate());
@@ -95,16 +98,17 @@ public class Head {
                 pstmt.setDouble(13, payroll.getPayroll().getNetic());
 
                 // Set the EmpId for the WHERE clause
-                pstmt.setInt(14, employee.indexOf(payroll) + 1);
+                pstmt.setInt(14, payroll.getEmpid());
 
 
                 // Add to batch
                 pstmt.addBatch();
+                pstmt.executeUpdate();
+
             }
 
 
             // Execute batch update
-            pstmt.executeUpdate();
             System.out.println("Payroll list updated successfully!");
 
         } catch (SQLException e) {
@@ -201,7 +205,7 @@ public class Head {
                     updateStmt.setDouble(11, payroll.getPayroll().getDeduction().getOthers());
                     updateStmt.setDouble(12, payroll.getPayroll().getDeduction().getTotal());
                     updateStmt.setDouble(13, payroll.getPayroll().getNetic());
-                    updateStmt.setInt(14, employee.indexOf(payroll)+1);
+                    updateStmt.setInt(14, payroll.getEmpid());
                     updateStmt.setInt(15, id);
 
                     updateStmt.executeUpdate();
@@ -222,7 +226,7 @@ public class Head {
                     insertStmt.setDouble(12, payroll.getPayroll().getDeduction().getTotal());
                     insertStmt.setDouble(13, payroll.getPayroll().getNetic());
                     insertStmt.setInt(14, id); // Use the found or generated DateId
-                    insertStmt.setInt(15, employee.indexOf(payroll)+1); // Use the employee ID from the object
+                    insertStmt.setInt(15, payroll.getEmpid()); // Use the employee ID from the object
 
                     insertStmt.executeUpdate(); // Execute insert immediately
                     System.out.println("Record inserted");
@@ -283,17 +287,22 @@ public class Head {
     }
 
     public static void delete(Employees employee){
-        String sql = "DELETE FROM EMPLOYEE WHERE EmpId = ?";
+        String delorg = "DELETE FROM EMPLOYEE WHERE EmpId = ?";
 
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        String delarc = "DELETE FROM EMPLOYEEARCHIVE WHERE EmpId = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(delorg);
+             PreparedStatement arcStmt = conn.prepareStatement(delarc)) {
 
             // Set the EmpId parameter
              // Replace with the actual EmpId to delete
             pstmt.setInt(1, employee.getEmpid());
+            arcStmt.setInt(1,employee.getEmpid());
 
             // Execute the DELETE query
             int rowsAffected = pstmt.executeUpdate();
-            if (rowsAffected > 0) {
+            int rowArc = arcStmt.executeUpdate();
+            if (rowsAffected > 0 && rowArc > 0) {
                 System.out.println("Row deleted successfully!");
             } else {
                 System.out.println("No row found with the given EmpId.");
@@ -324,6 +333,127 @@ public class Head {
 
         return employee;
     }
+
+
+
+    public static void view (LocalDate start,LocalDate end){
+        ArrayList<Employees>employee = new ArrayList<>();
+        Date mon = Date.valueOf(start.with(DayOfWeek.MONDAY));
+        Date sat = Date.valueOf(end.with(DayOfWeek.SATURDAY));
+
+        String url = "jdbc:mysql://localhost:3306/Payroll";  // Replace with your DB details
+        String user = "root";  // Replace with your MySQL username
+        String password = "722811@";  // Replace with your MySQL password
+
+        try {
+            // Load MySQL JDBC driver (optional in newer versions)
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // Establish a connection
+            conn = DriverManager.getConnection(url, user, password);
+
+            System.out.println("Connected to MySQL database!");
+
+
+            employeers = conn.createStatement().executeQuery("SELECT * FROM EMPLOYEEARCHIVE");
+            ResultSet date = conn.createStatement().executeQuery("SELECT * FROM DATE");
+            ArrayList<Integer> did = new ArrayList<>();
+            while (date.next()) {
+                // Check if DateMon is on or after 'mon' and DateSat is on or before 'sat'
+                if ((date.getDate("DateMon").after(mon) || date.getDate("DateMon").equals(mon)) &&
+                        (date.getDate("DateSat").before(sat) || date.getDate("DateSat").equals(sat))) {
+                    did.add(date.getInt("DateId"));
+                    System.out.println(did.get(did.size() - 1)); // Print the last added DateId
+                }
+            }
+
+            try {
+                while (employeers.next()) {
+                    if (did.contains(employeers.getInt("DateId"))) {
+                        boolean found = false;
+
+                        // Iterate over the employees list and check if EmpId matches
+                        for (Employees e : new ArrayList<>(employee)) { // Iterate over a copy to prevent modification issues
+                            if (e.getEmpid() == employeers.getInt("EmpId")) {
+                                // Update the existing employee
+                                e.addDays(employeers.getDouble("NoOfDays"));
+                                e.addSalary(employeers.getDouble("Salary"));
+                                e.addCommission(employeers.getDouble("Commissions"));
+                                e.getPayroll().addGrossic(employeers.getDouble("Gross"));
+
+                                e.getPayroll().getDeduction().addLoans(employeers.getDouble("Loans"));
+                                e.getPayroll().getDeduction().addSss(employeers.getDouble("SSS"));
+                                e.getPayroll().getDeduction().addPhilhealth(employeers.getDouble("PhilHealth"));
+                                e.getPayroll().getDeduction().addCashAdvanced(employeers.getDouble("CashAdvanced"));
+                                e.getPayroll().getDeduction().addOthers(employeers.getDouble("Others"));
+
+                                e.getPayroll().addNetic(employeers.getDouble("NetIncome"));
+                                System.out.println("add");
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        // If no matching employee was found, add a new one
+                        if (!found) {
+                            Deduction deduction = new Deduction(
+                                    employeers.getDouble("Loans"),
+                                    employeers.getDouble("SSS"),
+                                    employeers.getDouble("PhilHealth"),
+                                    employeers.getDouble("CashAdvanced"),
+                                    employeers.getDouble("Others")
+                            );
+                            Payroll payroll = new Payroll(
+                                    employeers.getDouble("Gross"),
+                                    employeers.getDouble("NetIncome"),
+                                    deduction
+                            );
+                            employee.add(new Employees(
+                                    employeers.getInt("EmpId"),
+                                    employeers.getString("Name"),
+                                    employeers.getDouble("Rate"),
+                                    employeers.getDouble("NoOfDays"),
+                                    employeers.getDouble("Salary"),
+                                    employeers.getDouble("Commissions"),
+                                    payroll
+                            ));
+                            System.out.println("insert");
+                        }
+                    }
+
+                    System.out.println(employee.size());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        try {
+            int i = 1;
+
+            // Create the TableGUI with the list of employees
+            new ViewGUI(employee);
+
+            // Output the employee details for verification
+            for (Employees e : employee) {
+                System.out.println(e.toString());
+            }
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
+
+
+
+
+
+
+
+
 
 
 
