@@ -50,7 +50,7 @@ public class TableGUI {
             @Override
             public boolean isCellEditable(int row, int column) {
                 // Make only specific columns editable
-                return column != 0 && column != 1 && column != 3 && column != 5&& column != 6 && column != 7 && column != 8 && column != 11 && column != 12;
+                return column != 3 && column != 5 && column != 12;
             }
         };
 
@@ -74,9 +74,9 @@ public class TableGUI {
                 } else {
                     // Set default background for editable and non-editable cells
                     if (table.isCellEditable(row, column)) {
-                        cellComponent.setBackground(Color.YELLOW);  // Editable cells
+                        cellComponent.setBackground(Color.WHITE);  // Editable cells
                     } else {
-                        cellComponent.setBackground(Color.WHITE);  // Non-editable cells
+                        cellComponent.setBackground(Color.YELLOW);  // Non-editable cells
                     }
                 }
 
@@ -399,7 +399,6 @@ public class TableGUI {
             createFrame.dispose();
             run();
         });
-
 
         bottomPanel.add(add);
         bottomPanel.add(delete);

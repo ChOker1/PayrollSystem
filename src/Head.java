@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import  java.sql.Date;
 import java.time.LocalDate;
 
-
 public class Head {
     static Connection conn;
     static ResultSet employeers;
@@ -446,16 +445,4 @@ public class Head {
         }
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
 }
