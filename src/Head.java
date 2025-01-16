@@ -290,17 +290,49 @@ public class Head {
 
         String delarc = "DELETE FROM EMPLOYEEARCHIVE WHERE EmpId = ?";
 
+        String date = "DELETE FROM DATE WHERE DateId = ?";
+
+        LocalDate now = LocalDate.now();
+        Date mon = Date.valueOf(now.with(DayOfWeek.MONDAY));
+        Date sat = Date.valueOf(now.with(DayOfWeek.SATURDAY));
+
+
+
         try (PreparedStatement pstmt = conn.prepareStatement(delorg);
              PreparedStatement arcStmt = conn.prepareStatement(delarc)) {
 
             // Set the EmpId parameter
              // Replace with the actual EmpId to delete
             pstmt.setInt(1, employee.getEmpid());
-            arcStmt.setInt(1,employee.getEmpid());
+            arcStmt.setInt(1, employee.getEmpid());
+            int id = 0;
+            String datee = "INSERT INTO DATE (DateMon, DateSat) VALUES (?, ?)";
+
+            // Query to check if the DateMon already exists
+            String query = "SELECT * FROM DATE WHERE DateMon = ?";
+            try (PreparedStatement pstmtd = conn.prepareStatement(query)) {
+                pstmt.setDate(1, mon);
+                ResultSet rs = pstmt.executeQuery();
+
+                // If a match is found, get the DateId
+                if (rs.next()) {
+                    id = rs.getInt("DateId");
+                }
+            }
+
+
+
+
+
 
             // Execute the DELETE query
+
             int rowsAffected = pstmt.executeUpdate();
-            int rowArc = arcStmt.executeUpdate();
+            int rowArc = 0;
+            if(id == 0){
+                rowArc = arcStmt.executeUpdate();
+            }
+
             if (rowsAffected > 0 && rowArc > 0) {
                 System.out.println("Row deleted successfully!");
             } else {

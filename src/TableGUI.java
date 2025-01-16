@@ -333,6 +333,7 @@ public class TableGUI {
 
                     // Save the data
                     Head.add(employeeList);
+                    Head.saveOrigin(employeeList);
 
 
 
@@ -420,6 +421,8 @@ public class TableGUI {
         createFrame.setVisible(true);
 
         createFrame.setLocationRelativeTo(null);
+
+        empty(employeeList);
 
 
     }
@@ -699,6 +702,12 @@ public class TableGUI {
 
         sframe.setVisible(true);
 
+    }
+
+    public static void empty(ArrayList<Employees> database) {
+        if (database.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "The Database is Empty", "Database Check", JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     public static void main(String[] args) {

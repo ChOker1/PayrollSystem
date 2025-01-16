@@ -74,5 +74,13 @@ public class ViewGUI {
         // Set the frame to be visible
         createFrame.setVisible(true);
         createFrame.setLocationRelativeTo(null);
+
+        empty(employeeList);
+    }
+
+    public static void empty(ArrayList<Employees> database) {
+        if (database.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "The Database is Empty", "Database Check", JOptionPane.WARNING_MESSAGE);
+        }
     }
 }
