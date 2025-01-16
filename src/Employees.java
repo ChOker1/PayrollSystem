@@ -7,7 +7,7 @@ public class Employees {
     private double commission;
     private double salary;
     private  Payroll payroll;
-
+    private int did;
     //constructors
 
     public  Employees(String name, double rate,Deduction deduction){
@@ -27,6 +27,17 @@ public class Employees {
         this.payroll = payroll;
 
     }
+    public  Employees(int empid,String name, double rate,double days,double salary,double commission,Payroll payroll,int did){
+        this.empid = empid;
+        this.name = name;
+        this.rate = rate;
+        this.days = days;
+        this.commission = commission;
+        this.salary = salary;
+        this.payroll = payroll;
+        this.did = did;
+
+    }
 
 
     //setters
@@ -39,16 +50,8 @@ public class Employees {
         this.commission = commission;
     }
 
-    public void addDays(double days) {
-        this.days = this.days + days;
-    }
-
-    public void addCommission(double commission) {
-        this.commission = this.commission + commission;
-    }
-
-    public void addSalary(double salary) {
-        this.salary = this.salary + salary;
+    public void setDid(int did) {
+        this.did = did;
     }
 
     //getters
@@ -76,6 +79,10 @@ public class Employees {
     public double getSalary() {
         salary = rate*days;
         return salary;
+    }
+
+    public int getDid() {
+        return did;
     }
 
     public int getEmpid() {

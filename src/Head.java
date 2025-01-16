@@ -366,62 +366,37 @@ public class Head {
                 }
             }
 
+            ArrayList<java.util.Date> dats = new ArrayList<>();
+            ArrayList<java.util.Date> datm = new ArrayList<>();
+
+
             try {
                 while (employeers.next()) {
-                    if (did.contains(employeers.getInt("DateId"))) {
-                        boolean found = false;
+                    Deduction deduction = new Deduction(
+                            employeers.getDouble("Loans"),
+                            employeers.getDouble("SSS"),
+                            employeers.getDouble("PhilHealth"),
+                            employeers.getDouble("CashAdvanced"),
+                            employeers.getDouble("Others")
+                    );
+                    Payroll payroll = new Payroll(
+                            employeers.getDouble("Gross"),
+                            employeers.getDouble("NetIncome"),
+                            deduction
+                    );
+                    employee.add(new Employees(
+                            employeers.getInt("EmpId"),
+                            employeers.getString("Name"),
+                            employeers.getDouble("Rate"),
+                            employeers.getDouble("NoOfDays"),
+                            employeers.getDouble("Salary"),
+                            employeers.getDouble("Commissions"),
+                            payroll
+                    ));
 
-                        // Iterate over the employees list and check if EmpId matches
-                        for (Employees e : new ArrayList<>(employee)) { // Iterate over a copy to prevent modification issues
-                            if (e.getEmpid() == employeers.getInt("EmpId")) {
-                                // Update the existing employee
-                                e.addDays(employeers.getDouble("NoOfDays"));
-                                e.addSalary(employeers.getDouble("Salary"));
-                                e.addCommission(employeers.getDouble("Commissions"));
-                                e.getPayroll().addGrossic(employeers.getDouble("Gross"));
-
-                                e.getPayroll().getDeduction().addLoans(employeers.getDouble("Loans"));
-                                e.getPayroll().getDeduction().addSss(employeers.getDouble("SSS"));
-                                e.getPayroll().getDeduction().addPhilhealth(employeers.getDouble("PhilHealth"));
-                                e.getPayroll().getDeduction().addCashAdvanced(employeers.getDouble("CashAdvanced"));
-                                e.getPayroll().getDeduction().addOthers(employeers.getDouble("Others"));
-
-                                e.getPayroll().addNetic(employeers.getDouble("NetIncome"));
-                                System.out.println("add");
-                                found = true;
-                                break;
-                            }
-                        }
-
-                        // If no matching employee was found, add a new one
-                        if (!found) {
-                            Deduction deduction = new Deduction(
-                                    employeers.getDouble("Loans"),
-                                    employeers.getDouble("SSS"),
-                                    employeers.getDouble("PhilHealth"),
-                                    employeers.getDouble("CashAdvanced"),
-                                    employeers.getDouble("Others")
-                            );
-                            Payroll payroll = new Payroll(
-                                    employeers.getDouble("Gross"),
-                                    employeers.getDouble("NetIncome"),
-                                    deduction
-                            );
-                            employee.add(new Employees(
-                                    employeers.getInt("EmpId"),
-                                    employeers.getString("Name"),
-                                    employeers.getDouble("Rate"),
-                                    employeers.getDouble("NoOfDays"),
-                                    employeers.getDouble("Salary"),
-                                    employeers.getDouble("Commissions"),
-                                    payroll
-                            ));
                             System.out.println("insert");
-                        }
                     }
-
                     System.out.println(employee.size());
-                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

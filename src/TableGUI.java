@@ -450,42 +450,41 @@ public class TableGUI {
         frame.setVisible(true);
     }
 
-    private static JPanel headerPanel = null;
-
     private static void updateCalendarPanel(JPanel calendarPanel, LocalDate currentMonth, Set<LocalDate> selectedDates,
                                             LocalDate[] range, JLabel selectedDatesLabel) {
         calendarPanel.removeAll();  // Clear the panel
 
-        // Create header panel if it doesn't exist yet
-        if (headerPanel == null) {
-            headerPanel = createHeaderPanel(currentMonth, selectedDates, range, selectedDatesLabel);
-        } else {
-            // Update the existing header panel
-            JLabel monthLabel = (JLabel) headerPanel.getComponent(1); // Get the month label
-            monthLabel.setText(currentMonth.getMonth() + " " + currentMonth.getYear());
-        }
+        // Create header panel
+        JPanel headerPanel = createHeaderPanel(currentMonth, selectedDates, range, selectedDatesLabel, calendarPanel);
+        calendarPanel.add(headerPanel, BorderLayout.NORTH);
 
         // Create and add the grid panel
         JPanel gridPanel = createCalendarGrid(currentMonth, selectedDates, range, selectedDatesLabel);
-        calendarPanel.add(headerPanel, BorderLayout.NORTH);
         calendarPanel.add(gridPanel, BorderLayout.CENTER);
 
-        calendarPanel.revalidate();
-        calendarPanel.repaint();
+        calendarPanel.revalidate(); // Revalidate the panel after adding components
+        calendarPanel.repaint(); // Repaint the panel
     }
 
     private static JPanel createHeaderPanel(LocalDate currentMonth, Set<LocalDate> selectedDates,
-                                            LocalDate[] range, JLabel selectedDatesLabel) {
+                                            LocalDate[] range, JLabel selectedDatesLabel, JPanel calendarPanel) {
         JPanel headerPanel = new JPanel(new BorderLayout());
 
         JButton prevButton = new JButton("<<");
         JButton nextButton = new JButton(">>");
         JLabel monthLabel = new JLabel(currentMonth.getMonth() + " " + currentMonth.getYear(), SwingConstants.CENTER);
 
-        prevButton.addActionListener(e -> updateCalendarPanel((JPanel) headerPanel.getParent(), currentMonth.minusMonths(1),
-                selectedDates, range, selectedDatesLabel));
-        nextButton.addActionListener(e -> updateCalendarPanel((JPanel) headerPanel.getParent(), currentMonth.plusMonths(1),
-                selectedDates, range, selectedDatesLabel));
+        // ActionListener for previous button
+        prevButton.addActionListener(e -> {
+            LocalDate newMonth = currentMonth.minusMonths(1);
+            updateCalendarPanel(calendarPanel, newMonth, selectedDates, range, selectedDatesLabel);
+        });
+
+        // ActionListener for next button
+        nextButton.addActionListener(e -> {
+            LocalDate newMonth = currentMonth.plusMonths(1);
+            updateCalendarPanel(calendarPanel, newMonth, selectedDates, range, selectedDatesLabel);
+        });
 
         headerPanel.add(prevButton, BorderLayout.WEST);
         headerPanel.add(monthLabel, BorderLayout.CENTER);
@@ -499,7 +498,7 @@ public class TableGUI {
         JPanel gridPanel = new JPanel();
         gridPanel.setLayout(new BorderLayout());
 
-        // Add Day of the Week Indicator (This will not be duplicated)
+        // Add Day of the Week Indicator
         JPanel weekHeaderPanel = new JPanel(new GridLayout(1, 7));
         String[] dayOfWeekNames = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
         for (String day : dayOfWeekNames) {
