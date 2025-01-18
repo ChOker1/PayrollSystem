@@ -69,8 +69,6 @@ public class Head {
     }
 
     public static void saveOrigin(ArrayList<Employees> employee) {
-
-
         String sql = "UPDATE EMPLOYEE SET " +
                 "Name = ?, Rate = ?, NoOfDays = ?, Salary = ?, Commissions = ?, " +
                 "Gross = ?, Loans = ?, SSS = ?, PhilHealth = ?, CashAdvanced = ?, " +
@@ -79,9 +77,6 @@ public class Head {
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             for (Employees payroll : employee) {
-                System.out.println(payroll.getName());
-                System.out.println(payroll.toString());
-                // Set parameters for each column
                 pstmt.setString(1, payroll.getName());
                 pstmt.setDouble(2, payroll.getRate());
                 pstmt.setDouble(3, payroll.getDays());
@@ -95,21 +90,11 @@ public class Head {
                 pstmt.setDouble(11, payroll.getPayroll().getDeduction().getOthers());
                 pstmt.setDouble(12, payroll.getPayroll().getDeduction().getTotal());
                 pstmt.setDouble(13, payroll.getPayroll().getNetic());
-
-                // Set the EmpId for the WHERE clause
                 pstmt.setInt(14, payroll.getEmpid());
 
-
-                // Add to batch
-                pstmt.addBatch();
-                pstmt.executeUpdate();
-
+                pstmt.executeUpdate(); // Perform the update immediately for each employee
             }
-
-
-            // Execute batch update
-            System.out.println("Payroll list updated successfully!");
-
+            System.out.println("Database updated successfully!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -463,6 +448,8 @@ public class Head {
         }catch (Exception e){
             e.printStackTrace();
         }
+
+
 
         try {
             int i = 1;

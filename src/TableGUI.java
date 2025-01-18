@@ -94,56 +94,37 @@ public class TableGUI {
             int row = e.getFirstRow();
             int column = e.getColumn();
 
-            // Prevent updates during an update to avoid infinite recursion
             if (row >= 0 && column >= 0 && !isUpdating) {
                 try {
-                    isUpdating = true;  // Set the flag to indicate an update is in progress
+                    isUpdating = true;
 
-                    if (column == 2 || column == 4 || column == 8 ) {
-                        Object newValue = model.getValueAt(row, column);
-                        if (newValue != null && !newValue.toString().trim().isEmpty()) {
-                            // Replace the "0" with the entered value
-                            if ("0".equals(model.getValueAt(row, column).toString())) {
-                                model.setValueAt(newValue, row, column);
-                            }
-                        }
-                    }
-
+                    // Update employeeList from the table
                     double days = Double.parseDouble(model.getValueAt(row, 2).toString());
                     employeeList.get(row).setDays(days);
-                    double salary = employeeList.get(row).getSalary();
-                    model.setValueAt(salary, row, 3); // Update SALARY
 
-                    double commissions = model.getValueAt(row, 4).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 4).toString());
+                    double commissions = Double.parseDouble(model.getValueAt(row, 4).toString());
                     employeeList.get(row).setCommission(commissions);
-                    employeeList.get(row).computeGross();
-                    double grossIncome = employeeList.get(row).getPayroll().getGrossic();
-                    model.setValueAt(grossIncome, row, 5); // Update GROSS INCOME
 
-                    double loans = model.getValueAt(row, 6).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 6).toString());
-                    double sss = model.getValueAt(row, 7).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 7).toString());
-                    double philhealth = model.getValueAt(row, 8).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 8).toString());
-                    double cashAdvanced = model.getValueAt(row,9).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row,9).toString());
-                    double others = model.getValueAt(row,10).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row,10).toString());
+                    // Update deductions and recompute other fields as needed
+                    double loans = Double.parseDouble(model.getValueAt(row, 6).toString());
+                    double sss = Double.parseDouble(model.getValueAt(row, 7).toString());
+                    double philhealth = Double.parseDouble(model.getValueAt(row, 8).toString());
+                    double cashAdvanced = Double.parseDouble(model.getValueAt(row, 9).toString());
+                    double others = Double.parseDouble(model.getValueAt(row, 10).toString());
 
-
-                    Deduction deduction= new Deduction(loans,sss,philhealth,cashAdvanced,others);
+                    Deduction deduction = new Deduction(loans, sss, philhealth, cashAdvanced, others);
                     employeeList.get(row).getPayroll().setDeduction(deduction);
 
-                    double totalDeduction = employeeList.get(row).getPayroll().getDeduction().getTotal();
-                    model.setValueAt(totalDeduction, row, 11); // Update DEDUCTION
+                    employeeList.get(row).computeGross(); // Recalculate gross income
+                    employeeList.get(row).getPayroll().computeNet(); // Recalculate net income
 
-                    double netIncome = employeeList.get(row).getnet();
-                    model.setValueAt(netIncome, row, 12); // Update NET INCOME
+                    // Update the table model after data is updated
+                    model.fireTableCellUpdated(row, column);
+
                 } catch (NumberFormatException ex) {
-                    // Handle invalid input gracefully
                     System.err.println("Invalid input in table cell: " + ex.getMessage());
-                }
-                catch (Exception ex){
-                    ex.printStackTrace();
-                }
-                finally {
-                    isUpdating = false;  // Reset the flag after the update is done
+                } finally {
+                    isUpdating = false;
                 }
             }
         });
@@ -154,9 +135,10 @@ public class TableGUI {
                 int row = table.getSelectedRow();
                 int column = table.getSelectedColumn();
 
-                // Check if the selected cell is editable
+                // Check if the selected cell is editable and if the key pressed is a number
                 char in = e.getKeyChar();
-                if (row >= 0 && column >= 0 && model.isCellEditable(row, column)&& Character.isDigit(in)) {
+                if (row >= 0 && column >= 0 && model.isCellEditable(row, column) && Character.isDigit(in)) {
+                    // Clear the cell value only when a numeric key is pressed
                     model.setValueAt("", row, column);  // Clear the cell value
                 }
             }
