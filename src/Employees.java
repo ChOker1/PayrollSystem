@@ -53,6 +53,17 @@ public class Employees {
     public void setDid(int did) {
         this.did = did;
     }
+    public void addDays(double days) {
+        this.days = this.days + days;
+    }
+
+    public void addCommission(double commission) {
+        this.commission = this.commission + commission;
+    }
+
+    public void addSalary(double salary) {
+        this.salary = this.salary + salary;
+    }
 
     //getters
 

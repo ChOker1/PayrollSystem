@@ -194,6 +194,7 @@ public class TableGUI {
                 JOptionPane.showMessageDialog(createFrame, "Please ensure all fields are filled before saving.", "Validation Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 // Proceed with saving
+                update(employeeList,model);
                 Head.saveOrigin(employeeList);
                 Head.save(employeeList);
                 System.out.println("Saved");
@@ -350,6 +351,8 @@ public class TableGUI {
             input.add(panel);
             input.setVisible(true);
         });
+
+
 
 
 
@@ -709,6 +712,26 @@ public class TableGUI {
             JOptionPane.showMessageDialog(null, "The Database is Empty", "Database Check", JOptionPane.WARNING_MESSAGE);
         }
     }
+
+
+    public static ArrayList<Employees> update(ArrayList<Employees> employees, DefaultTableModel model){
+        int row = model.getRowCount();
+        int i = 0;
+        ArrayList<Employees> anew = new ArrayList<>();
+        while ( i < row){
+            Deduction  deduction = new Deduction(Double.parseDouble(model.getValueAt(i,6).toString()),Double.parseDouble(model.getValueAt(i,7).toString()),Double.parseDouble(model.getValueAt(i,8).toString()),Double.parseDouble(model.getValueAt(i,9).toString()),Double.parseDouble(model.getValueAt(i,10).toString()));
+            Payroll payroll = new Payroll(Double.parseDouble(model.getValueAt(i,5).toString()),Double.parseDouble(model.getValueAt(i,12).toString()),deduction);
+            anew.add(new Employees(employees.get(i).getEmpid(),model.getValueAt(i,0).toString(),Double.parseDouble(model.getValueAt(i,1).toString()),Double.parseDouble(model.getValueAt(i,2).toString()),Double.parseDouble(model.getValueAt(i,3).toString()),Double.parseDouble(model.getValueAt(i,4).toString()),payroll));
+
+            i++;
+        }
+
+        return  employees;
+    }
+
+
+
+
 
     public static void main(String[] args) {
         run();

@@ -189,7 +189,7 @@ public class Head {
                 checkStmt.setInt(2, id);
                 ResultSet rs = checkStmt.executeQuery();
 
-                if (rs.next() && rs.getInt(1) > 0) {
+                if (rs.next() && rs.getInt(1) == payroll.getEmpid()) {
                     // If the record exists, update it
                     updateStmt.setString(1, payroll.getName());
                     updateStmt.setDouble(2, payroll.getRate());
@@ -285,65 +285,68 @@ public class Head {
 
     }
 
-    public static void delete(Employees employee){
-        String delorg = "DELETE FROM EMPLOYEE WHERE EmpId = ?";
-
-        String delarc = "DELETE FROM EMPLOYEEARCHIVE WHERE EmpId = ?";
-
-        String date = "DELETE FROM DATE WHERE DateId = ?";
+    public static void delete(Employees employee) {
+        String delOrg = "DELETE FROM EMPLOYEE WHERE EmpId = ?";
+        String delArc = "DELETE FROM EMPLOYEEARCHIVE WHERE EmpId = ? AND DateId = ?";
+        String queryDate = "SELECT * FROM DATE WHERE DateMon = ?";
+        String queryArc = "SELECT * FROM EMPLOYEEARCHIVE WHERE EmpId = ? AND DateId = ?";
 
         LocalDate now = LocalDate.now();
         Date mon = Date.valueOf(now.with(DayOfWeek.MONDAY));
-        Date sat = Date.valueOf(now.with(DayOfWeek.SATURDAY));
 
+        try (
+                PreparedStatement orgStmt = conn.prepareStatement(delOrg);
+                PreparedStatement arcStmt = conn.prepareStatement(delArc);
+                PreparedStatement dateQueryStmt = conn.prepareStatement(queryDate);
+                PreparedStatement arcCheckStmt = conn.prepareStatement(queryArc)
+        ) {
+            // Check if DateMon exists in the DATE table
+            dateQueryStmt.setDate(1, mon);
+            ResultSet dateRs = dateQueryStmt.executeQuery();
 
+            int dateId = 0;
+            if (dateRs.next()) {
+                dateId = dateRs.getInt("DateId");
+            }
+            dateRs.close();
 
-        try (PreparedStatement pstmt = conn.prepareStatement(delorg);
-             PreparedStatement arcStmt = conn.prepareStatement(delarc)) {
+            if (dateId > 0) {
+                // Check if the combination of DateId and EmpId exists in EMPLOYEEARCHIVE
+                arcCheckStmt.setInt(1, employee.getEmpid());
+                arcCheckStmt.setInt(2, dateId);
+                ResultSet arcRs = arcCheckStmt.executeQuery();
 
-            // Set the EmpId parameter
-             // Replace with the actual EmpId to delete
-            pstmt.setInt(1, employee.getEmpid());
-            arcStmt.setInt(1, employee.getEmpid());
-            int id = 0;
-            String datee = "INSERT INTO DATE (DateMon, DateSat) VALUES (?, ?)";
-
-            // Query to check if the DateMon already exists
-            String query = "SELECT * FROM DATE WHERE DateMon = ?";
-            try (PreparedStatement pstmtd = conn.prepareStatement(query)) {
-                pstmt.setDate(1, mon);
-                ResultSet rs = pstmt.executeQuery();
-
-                // If a match is found, get the DateId
-                if (rs.next()) {
-                    id = rs.getInt("DateId");
+                if (arcRs.next()) {
+                    // Delete from EMPLOYEEARCHIVE if the condition is satisfied
+                    arcStmt.setInt(1, employee.getEmpid());
+                    arcStmt.setInt(2, dateId);
+                    int rowsAffectedArc = arcStmt.executeUpdate();
+                    if (rowsAffectedArc > 0) {
+                        System.out.println("Employee deleted from EMPLOYEEARCHIVE successfully.");
+                    } else {
+                        System.out.println("No matching record found in EMPLOYEEARCHIVE for deletion.");
+                    }
+                } else {
+                    System.out.println("No matching EmpId and DateId found in EMPLOYEEARCHIVE.");
                 }
-            }
-
-
-
-
-
-
-            // Execute the DELETE query
-
-            int rowsAffected = pstmt.executeUpdate();
-            int rowArc = 0;
-            if(id == 0){
-                rowArc = arcStmt.executeUpdate();
-            }
-
-            if (rowsAffected > 0 && rowArc > 0) {
-                System.out.println("Row deleted successfully!");
+                arcRs.close();
             } else {
-                System.out.println("No row found with the given EmpId.");
+                System.out.println("No matching DateMon found in the DATE table.");
+            }
+
+            // Delete from EMPLOYEE table
+            orgStmt.setInt(1, employee.getEmpid());
+            int rowsAffectedOrg = orgStmt.executeUpdate();
+            if (rowsAffectedOrg > 0) {
+                System.out.println("Employee deleted from EMPLOYEE table successfully.");
+            } else {
+                System.out.println("No matching EmpId found in EMPLOYEE table.");
             }
 
         } catch (SQLException e) {
-            System.out.println(" delete error");
+            System.out.println("Delete error.");
             e.printStackTrace();
         }
-
     }
 
     public static ArrayList<Employees> update (ArrayList<Employees> employee){
@@ -398,36 +401,61 @@ public class Head {
                 }
             }
 
-            ArrayList<java.util.Date> dats = new ArrayList<>();
-            ArrayList<java.util.Date> datm = new ArrayList<>();
-
 
             try {
                 while (employeers.next()) {
-                    Deduction deduction = new Deduction(
-                            employeers.getDouble("Loans"),
-                            employeers.getDouble("SSS"),
-                            employeers.getDouble("PhilHealth"),
-                            employeers.getDouble("CashAdvanced"),
-                            employeers.getDouble("Others")
-                    );
-                    Payroll payroll = new Payroll(
-                            employeers.getDouble("Gross"),
-                            employeers.getDouble("NetIncome"),
-                            deduction
-                    );
-                    employee.add(new Employees(
-                            employeers.getInt("EmpId"),
-                            employeers.getString("Name"),
-                            employeers.getDouble("Rate"),
-                            employeers.getDouble("NoOfDays"),
-                            employeers.getDouble("Salary"),
-                            employeers.getDouble("Commissions"),
-                            payroll
-                    ));
+                    if (did.contains(employeers.getInt("DateId"))) {
+                        boolean found = false;
 
+                        // Iterate over the employees list and check if EmpId matches
+                        for (Employees e : new ArrayList<>(employee)) { // Iterate over a copy to prevent modification issues
+                            if (e.getEmpid() == employeers.getInt("EmpId")) {
+                                // Update the existing employee
+                                e.addDays(employeers.getDouble("NoOfDays"));
+                                e.addSalary(employeers.getDouble("Salary"));
+                                e.addCommission(employeers.getDouble("Commissions"));
+                                e.getPayroll().addGrossic(employeers.getDouble("Gross"));
+
+                                e.getPayroll().getDeduction().addLoans(employeers.getDouble("Loans"));
+                                e.getPayroll().getDeduction().addSss(employeers.getDouble("SSS"));
+                                e.getPayroll().getDeduction().addPhilhealth(employeers.getDouble("PhilHealth"));
+                                e.getPayroll().getDeduction().addCashAdvanced(employeers.getDouble("CashAdvanced"));
+                                e.getPayroll().getDeduction().addOthers(employeers.getDouble("Others"));
+
+                                e.getPayroll().addNetic(employeers.getDouble("NetIncome"));
+                                System.out.println("add");
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        // If no matching employee was found, add a new one
+                        if (!found) {
+                            Deduction deduction = new Deduction(
+                                    employeers.getDouble("Loans"),
+                                    employeers.getDouble("SSS"),
+                                    employeers.getDouble("PhilHealth"),
+                                    employeers.getDouble("CashAdvanced"),
+                                    employeers.getDouble("Others")
+                            );
+                            Payroll payroll = new Payroll(
+                                    employeers.getDouble("Gross"),
+                                    employeers.getDouble("NetIncome"),
+                                    deduction
+                            );
+                            employee.add(new Employees(
+                                    employeers.getInt("EmpId"),
+                                    employeers.getString("Name"),
+                                    employeers.getDouble("Rate"),
+                                    employeers.getDouble("NoOfDays"),
+                                    employeers.getDouble("Salary"),
+                                    employeers.getDouble("Commissions"),
+                                    payroll
+                            ));
                             System.out.println("insert");
+                        }
                     }
+                }
                     System.out.println(employee.size());
             } catch (Exception e) {
                 e.printStackTrace();
