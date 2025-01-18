@@ -94,37 +94,56 @@ public class TableGUI {
             int row = e.getFirstRow();
             int column = e.getColumn();
 
+            // Prevent updates during an update to avoid infinite recursion
             if (row >= 0 && column >= 0 && !isUpdating) {
                 try {
-                    isUpdating = true;
+                    isUpdating = true;  // Set the flag to indicate an update is in progress
 
-                    // Update employeeList from the table
+                    if (column == 2 || column == 4 || column == 8 ) {
+                        Object newValue = model.getValueAt(row, column);
+                        if (newValue != null && !newValue.toString().trim().isEmpty()) {
+                            // Replace the "0" with the entered value
+                            if ("0".equals(model.getValueAt(row, column).toString())) {
+                                model.setValueAt(newValue, row, column);
+                            }
+                        }
+                    }
+
                     double days = Double.parseDouble(model.getValueAt(row, 2).toString());
                     employeeList.get(row).setDays(days);
+                    double salary = employeeList.get(row).getSalary();
+                    model.setValueAt(salary, row, 3); // Update SALARY
 
-                    double commissions = Double.parseDouble(model.getValueAt(row, 4).toString());
+                    double commissions = model.getValueAt(row, 4).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 4).toString());
                     employeeList.get(row).setCommission(commissions);
+                    employeeList.get(row).computeGross();
+                    double grossIncome = employeeList.get(row).getPayroll().getGrossic();
+                    model.setValueAt(grossIncome, row, 5); // Update GROSS INCOME
 
-                    // Update deductions and recompute other fields as needed
-                    double loans = Double.parseDouble(model.getValueAt(row, 6).toString());
-                    double sss = Double.parseDouble(model.getValueAt(row, 7).toString());
-                    double philhealth = Double.parseDouble(model.getValueAt(row, 8).toString());
-                    double cashAdvanced = Double.parseDouble(model.getValueAt(row, 9).toString());
-                    double others = Double.parseDouble(model.getValueAt(row, 10).toString());
+                    double loans = model.getValueAt(row, 6).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 6).toString());
+                    double sss = model.getValueAt(row, 7).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 7).toString());
+                    double philhealth = model.getValueAt(row, 8).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row, 8).toString());
+                    double cashAdvanced = model.getValueAt(row,9).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row,9).toString());
+                    double others = model.getValueAt(row,10).toString().isEmpty() ? 0 : Double.parseDouble(model.getValueAt(row,10).toString());
 
-                    Deduction deduction = new Deduction(loans, sss, philhealth, cashAdvanced, others);
+
+                    Deduction deduction= new Deduction(loans,sss,philhealth,cashAdvanced,others);
                     employeeList.get(row).getPayroll().setDeduction(deduction);
 
-                    employeeList.get(row).computeGross(); // Recalculate gross income
-                    employeeList.get(row).getPayroll().computeNet(); // Recalculate net income
+                    double totalDeduction = employeeList.get(row).getPayroll().getDeduction().getTotal();
+                    model.setValueAt(totalDeduction, row, 11); // Update DEDUCTION
 
-                    // Update the table model after data is updated
-                    model.fireTableCellUpdated(row, column);
-
+                    double netIncome = employeeList.get(row).getnet();
+                    model.setValueAt(netIncome, row, 12); // Update NET INCOME
                 } catch (NumberFormatException ex) {
+                    // Handle invalid input gracefully
                     System.err.println("Invalid input in table cell: " + ex.getMessage());
-                } finally {
-                    isUpdating = false;
+                }
+                catch (Exception ex){
+                    ex.printStackTrace();
+                }
+                finally {
+                    isUpdating = false;  // Reset the flag after the update is done
                 }
             }
         });
@@ -135,10 +154,9 @@ public class TableGUI {
                 int row = table.getSelectedRow();
                 int column = table.getSelectedColumn();
 
-                // Check if the selected cell is editable and if the key pressed is a number
+                // Check if the selected cell is editable
                 char in = e.getKeyChar();
-                if (row >= 0 && column >= 0 && model.isCellEditable(row, column) && Character.isDigit(in)) {
-                    // Clear the cell value only when a numeric key is pressed
+                if (row >= 0 && column >= 0 && model.isCellEditable(row, column)&& Character.isDigit(in)) {
                     model.setValueAt("", row, column);  // Clear the cell value
                 }
             }
@@ -176,7 +194,6 @@ public class TableGUI {
                 JOptionPane.showMessageDialog(createFrame, "Please ensure all fields are filled before saving.", "Validation Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 // Proceed with saving
-                update(employeeList,model);
                 Head.saveOrigin(employeeList);
                 Head.save(employeeList);
                 System.out.println("Saved");
@@ -316,7 +333,6 @@ public class TableGUI {
 
                     // Save the data
                     Head.add(employeeList);
-                    Head.saveOrigin(employeeList);
 
 
 
@@ -333,8 +349,6 @@ public class TableGUI {
             input.add(panel);
             input.setVisible(true);
         });
-
-
 
 
 
@@ -407,8 +421,6 @@ public class TableGUI {
 
         createFrame.setLocationRelativeTo(null);
 
-        empty(employeeList);
-
 
     }
 
@@ -438,41 +450,42 @@ public class TableGUI {
         frame.setVisible(true);
     }
 
+    private static JPanel headerPanel = null;
+
     private static void updateCalendarPanel(JPanel calendarPanel, LocalDate currentMonth, Set<LocalDate> selectedDates,
                                             LocalDate[] range, JLabel selectedDatesLabel) {
         calendarPanel.removeAll();  // Clear the panel
 
-        // Create header panel
-        JPanel headerPanel = createHeaderPanel(currentMonth, selectedDates, range, selectedDatesLabel, calendarPanel);
-        calendarPanel.add(headerPanel, BorderLayout.NORTH);
+        // Create header panel if it doesn't exist yet
+        if (headerPanel == null) {
+            headerPanel = createHeaderPanel(currentMonth, selectedDates, range, selectedDatesLabel);
+        } else {
+            // Update the existing header panel
+            JLabel monthLabel = (JLabel) headerPanel.getComponent(1); // Get the month label
+            monthLabel.setText(currentMonth.getMonth() + " " + currentMonth.getYear());
+        }
 
         // Create and add the grid panel
         JPanel gridPanel = createCalendarGrid(currentMonth, selectedDates, range, selectedDatesLabel);
+        calendarPanel.add(headerPanel, BorderLayout.NORTH);
         calendarPanel.add(gridPanel, BorderLayout.CENTER);
 
-        calendarPanel.revalidate(); // Revalidate the panel after adding components
-        calendarPanel.repaint(); // Repaint the panel
+        calendarPanel.revalidate();
+        calendarPanel.repaint();
     }
 
     private static JPanel createHeaderPanel(LocalDate currentMonth, Set<LocalDate> selectedDates,
-                                            LocalDate[] range, JLabel selectedDatesLabel, JPanel calendarPanel) {
+                                            LocalDate[] range, JLabel selectedDatesLabel) {
         JPanel headerPanel = new JPanel(new BorderLayout());
 
         JButton prevButton = new JButton("<<");
         JButton nextButton = new JButton(">>");
         JLabel monthLabel = new JLabel(currentMonth.getMonth() + " " + currentMonth.getYear(), SwingConstants.CENTER);
 
-        // ActionListener for previous button
-        prevButton.addActionListener(e -> {
-            LocalDate newMonth = currentMonth.minusMonths(1);
-            updateCalendarPanel(calendarPanel, newMonth, selectedDates, range, selectedDatesLabel);
-        });
-
-        // ActionListener for next button
-        nextButton.addActionListener(e -> {
-            LocalDate newMonth = currentMonth.plusMonths(1);
-            updateCalendarPanel(calendarPanel, newMonth, selectedDates, range, selectedDatesLabel);
-        });
+        prevButton.addActionListener(e -> updateCalendarPanel((JPanel) headerPanel.getParent(), currentMonth.minusMonths(1),
+                selectedDates, range, selectedDatesLabel));
+        nextButton.addActionListener(e -> updateCalendarPanel((JPanel) headerPanel.getParent(), currentMonth.plusMonths(1),
+                selectedDates, range, selectedDatesLabel));
 
         headerPanel.add(prevButton, BorderLayout.WEST);
         headerPanel.add(monthLabel, BorderLayout.CENTER);
@@ -486,7 +499,7 @@ public class TableGUI {
         JPanel gridPanel = new JPanel();
         gridPanel.setLayout(new BorderLayout());
 
-        // Add Day of the Week Indicator
+        // Add Day of the Week Indicator (This will not be duplicated)
         JPanel weekHeaderPanel = new JPanel(new GridLayout(1, 7));
         String[] dayOfWeekNames = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
         for (String day : dayOfWeekNames) {
@@ -688,32 +701,6 @@ public class TableGUI {
         sframe.setVisible(true);
 
     }
-
-    public static void empty(ArrayList<Employees> database) {
-        if (database.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "The Database is Empty", "Database Check", JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-
-    public static ArrayList<Employees> update(ArrayList<Employees> employees, DefaultTableModel model){
-        int row = model.getRowCount();
-        int i = 0;
-        ArrayList<Employees> anew = new ArrayList<>();
-        while ( i < row){
-            Deduction  deduction = new Deduction(Double.parseDouble(model.getValueAt(i,6).toString()),Double.parseDouble(model.getValueAt(i,7).toString()),Double.parseDouble(model.getValueAt(i,8).toString()),Double.parseDouble(model.getValueAt(i,9).toString()),Double.parseDouble(model.getValueAt(i,10).toString()));
-            Payroll payroll = new Payroll(Double.parseDouble(model.getValueAt(i,5).toString()),Double.parseDouble(model.getValueAt(i,12).toString()),deduction);
-            anew.add(new Employees(employees.get(i).getEmpid(),model.getValueAt(i,0).toString(),Double.parseDouble(model.getValueAt(i,1).toString()),Double.parseDouble(model.getValueAt(i,2).toString()),Double.parseDouble(model.getValueAt(i,3).toString()),Double.parseDouble(model.getValueAt(i,4).toString()),payroll));
-
-            i++;
-        }
-
-        return  employees;
-    }
-
-
-
-
 
     public static void main(String[] args) {
         run();

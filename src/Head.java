@@ -394,7 +394,7 @@ public class Head {
 
                         // Iterate over the employees list and check if EmpId matches
                         for (Employees e : new ArrayList<>(employee)) { // Iterate over a copy to prevent modification issues
-                            if (e.getEmpid() == employeers.getInt("EmpId")) {
+                            if (e.getEmpid() != employeers.getInt("EmpId")) {
                                 // Update the existing employee
                                 e.addDays(employeers.getDouble("NoOfDays"));
                                 e.addSalary(employeers.getDouble("Salary"));
